@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>platform-application</key>
+        <true/>
+        <key>com.apple.private.security.no-sandbox</key>
+        <true/>
+    	<key>com.apple.private.security.storage-exempt.heritable</key>
+    	<true/>
+    	<key>com.apple.rootless.install.heritable</key>
+    	<true/>
+        <key>com.apple.developer.kernel.increased-memory-limit</key>
+        <true/>
+        <key>com.apple.developer.kernel.extended-virtual-addressing</key>
+        <true/>
+        <key>task_for_pid-allow</key>
+        <true/>
+        <key>get-task-allow</key>
+        <true/>
+        <key>com.apple.security.get-task-allow</key>
+        <true/>
+        <key>proc_info-allow</key>
+        <true/>
+        <key>com.apple.system-task-ports</key>
+        <true/>
+        <key>com.apple.private.persona-mgmt</key>
+        <true/>
+        <key>com.apple.private.security.storage.AppDataContainers</key>
+        <true/>
+        <key>com.apple.security.iokit-user-client-class</key>
+        <true/>
+        <key>com.apple.private.memorystatus</key>
+        <true/>
+        <key>com.apple.private.xpc.launchd.reboot</key>
+        <true/>
+        <key>com.apple.private.xpc.launchd.userspace-reboot</key>
+        <true/>
+        <key>com.apple.security.iokit-user-client-class</key>
+        <array>
+        	<string>IOSurfaceRootUserClient</string>
+        	<string>AGXDeviceUserClient</string>
+        	<string>AGXSharedUserClient</string>
+        	<string>AGXCommandQueue</string>
+        	<string>AGXDevice</string>
+        </array>
+        <key>com.apple.security.exception.mach-lookup.global-name</key>
+        <array>
+            	<string>com.apple.mmaintenanced</string>
+            	<string>com.apple.memory-maintenance</string>
+        </array>
+        <key>com.apple.private.MobileContainerManager.allowed</key>
+        <true/>
+	<key>com.apple.springboard.launchapplications</key>
+        <true/>
+</dict>
+</plist>
