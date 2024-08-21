@@ -8,10 +8,6 @@
 
 import UIKit
 
-func fileExists(atPath path: String) -> Bool {
-    return FileManager.default.fileExists(atPath: path)
-}
-
 class JailbreakViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, LoggerDelegate {
 
     let tableView = UITableView()
@@ -142,11 +138,7 @@ extension JailbreakViewController: JBButtonDelegate {
         button.updateButtonState(.jailbreaking)
         DispatchQueue.global().async {
             krw_init_landa()
-            if fileExists(atPath: "/var/jb/sbin/launchd") {
-                _ = callSwitchSysBin(vnode: get_vnode_for_path_by_chdir("/sbin"), what: "launchd", with: "/var/jb/sbin/launchd")
-            } else if fileExists(atPath: "/var/jb/System/Library/SysBins/launchd") {
-                _ = callSwitchSysBin(vnode: get_vnode_for_path_by_chdir("/sbin"), what: "launchd", with: "/var/jb/System/Library/SysBins/launchd")
-            }
+            _ = callSwitchSysBin(vnode: get_vnode_for_path_by_chdir("/sbin"), what: "launchd", with: "/var/jb/sbin/launchd")
             krw_deinit()
             userspaceReboot()
         }
