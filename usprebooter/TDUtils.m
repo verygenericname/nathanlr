@@ -26,9 +26,10 @@ NSMutableArray *appList(void) {
         NSString *appBundlePath = appPath(bundleID);
         NSString *appBundleAppPath = findAppPathInBundlePath(appBundlePath);
         
-        if (fileExists([appBundlePath stringByAppendingPathComponent:@"_TrollStore"])) {
+        if ([appBundlePath containsString:@"/var/containers/Bundle/Application/"]) {
             if ([name isEqualToString:@"TrollStore"]) return;
             if ([name isEqualToString:@"nathanlr"]) return;
+            if (fileExists([appBundleAppPath stringByAppendingString:@"/.TrollStorePersistenceHelper"])) return;
         } else {
             if (![proxy atl_isUserApplication]) return;
         }

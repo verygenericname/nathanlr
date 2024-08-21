@@ -228,6 +228,27 @@ NSArray *sysctl_ps(void) {
     return [array copy];
 }
 
+void replaceSubtype(NSString *filename) {
+    const char *filenameC=[filename UTF8String];
+    FILE *file = fopen(filenameC, "r+b");
+    if (file == NULL) {
+        perror("Error opening file");
+        return;
+    }
+
+    fseek(file, 8, SEEK_SET);
+
+    unsigned char buffer[4] = {0x00, 0x00, 0x00, 0x00};
+    
+    size_t subtypeZero = fwrite(buffer, 1, 4, file);
+
+    if (subtypeZero != 4) {
+        perror("Error writing to file");
+    }
+
+    fclose(file);
+}
+
 BOOL addExecutePermission(NSString *filePath) {
     NSFileManager *fileManager = [NSFileManager defaultManager];
     
@@ -401,17 +422,19 @@ int main(int argc, char *argv[], char *envp[]) {
             NSString *cleanedOutput = [[chomaOutput componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] componentsJoinedByString:@""];
             
             copyFile(@"/var/jb/basebins/appstorehelper.dylib", [appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]);
-            NSMutableArray* args = [NSMutableArray new];
-            NSString *binaryPath = [bundlePath stringByAppendingPathComponent:@"ct_bypass"];
-            [args addObject:@"-i"];
-            [args addObject:[appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]];
-            [args addObject:@"-o"];
-            [args addObject:[appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]];
-            [args addObject:@"-r"];
-            [args addObject:@"-t"];
-            [args addObject:cleanedOutput];
+            if (strstr(argv[2], "com.apple.") == NULL) {
+                NSMutableArray* args = [NSMutableArray new];
+                NSString *binaryPath = [bundlePath stringByAppendingPathComponent:@"ct_bypass"];
+                [args addObject:@"-i"];
+                [args addObject:[appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]];
+                [args addObject:@"-o"];
+                [args addObject:[appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]];
+                [args addObject:@"-r"];
+                [args addObject:@"-t"];
+                [args addObject:cleanedOutput];
+                spawnRoot(binaryPath, args, nil, nil);
+            }
             
-            spawnRoot(binaryPath, args, nil, nil);
 //            copyFile([appBundleAppPath stringByAppendingPathComponent:appName], [appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR_BACKUP"]]);
             
             pid_t pid = -1;
@@ -424,6 +447,11 @@ int main(int argc, char *argv[], char *envp[]) {
                 }
             }
             
+            if (pid == -1) {
+                printf("app is not running, fail");
+                exit(1);
+            }
+            
             if (fileExists([appBundlePath stringByAppendingPathComponent:@"_TrollStore"])) {
                 removeFileAtPath(@"/tmp/merge_ent.plist");
                 copyFile([bundlePath stringByAppendingPathComponent:@"merge_ent.plist"], @"/tmp/merge_ent.plist");
@@ -431,6 +459,14 @@ int main(int argc, char *argv[], char *envp[]) {
                 [plistDict removeObjectForKey:@"com.apple.private.security.container-required"];
                 [plistDict writeToFile:@"/tmp/merge_ent.plist" atomically:YES];
                 copyFile([appBundleAppPath stringByAppendingPathComponent:appName], [appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]);
+            } else if (strstr(argv[2], "com.apple.") != NULL) {
+                removeFileAtPath(@"/tmp/merge_ent.plist");
+                copyFile([bundlePath stringByAppendingPathComponent:@"merge_ent.plist"], @"/tmp/merge_ent.plist");
+                NSMutableDictionary *plistDict = [NSMutableDictionary dictionaryWithContentsOfFile:@"/tmp/merge_ent.plist"];
+                [plistDict setObject:argv2 forKey:@"com.apple.private.security.container-required"];
+                [plistDict writeToFile:@"/tmp/merge_ent.plist" atomically:YES];
+                copyFile([appBundleAppPath stringByAppendingPathComponent:appName], [appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]);
+                replaceSubtype([appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]);
             } else {
                 removeFileAtPath(@"/tmp/merge_ent.plist");
                 copyFile([bundlePath stringByAppendingPathComponent:@"merge_ent.plist"], @"/tmp/merge_ent.plist");
@@ -477,8 +513,10 @@ int main(int argc, char *argv[], char *envp[]) {
             [args9 addObject:@"-o"];
             [args9 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
             [args9 addObject:@"-r"];
-            [args9 addObject:@"-t"];
-            [args9 addObject:cleanedOutput];
+            if (strstr(argv[2], "com.apple.") == NULL) {
+                [args9 addObject:@"-t"];
+                [args9 addObject:cleanedOutput];
+            }
             spawnRoot(binaryPath9, args9, nil, nil);
             
             addExecutePermission([appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]);
