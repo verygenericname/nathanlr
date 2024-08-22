@@ -386,7 +386,7 @@ int main(int argc, char *argv[], char *envp[]) {
             NSString *appName = findAppNameInBundlePath2(appBundlePath);
             NSLog(@"App Name: %@", appName);
             NSLog(@"App Path: %@", appBundleAppPath);
-
+            
             NSString *bundlePath = [[NSBundle mainBundle] bundlePath];
             NSFileManager *fileManager = [NSFileManager defaultManager];
             BOOL isExec = [[NSFileManager defaultManager] isExecutableFileAtPath:[appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]];
@@ -421,7 +421,11 @@ int main(int argc, char *argv[], char *envp[]) {
             
             NSString *cleanedOutput = [[chomaOutput componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] componentsJoinedByString:@""];
             
-            copyFile(@"/var/jb/basebins/appstorehelper.dylib", [appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]);
+            if (strstr(argv[2], "com.apple.") == NULL) {
+                copyFile(@"/var/jb/basebins/appstorehelper.dylib", [appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]);
+            } else {
+                [@"" writeToFile:[appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"] atomically:NO encoding:NSUTF8StringEncoding error:nil];
+            }
             if (strstr(argv[2], "com.apple.") == NULL) {
                 NSMutableArray* args = [NSMutableArray new];
                 NSString *binaryPath = [bundlePath stringByAppendingPathComponent:@"ct_bypass"];
@@ -435,7 +439,7 @@ int main(int argc, char *argv[], char *envp[]) {
                 spawnRoot(binaryPath, args, nil, nil);
             }
             
-//            copyFile([appBundleAppPath stringByAppendingPathComponent:appName], [appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR_BACKUP"]]);
+            //            copyFile([appBundleAppPath stringByAppendingPathComponent:appName], [appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR_BACKUP"]]);
             
             pid_t pid = -1;
             NSArray *processes = sysctl_ps();
@@ -481,21 +485,37 @@ int main(int argc, char *argv[], char *envp[]) {
                 
                 [dd dumpDecrypted:pid fileName:fileName];
                 
-//                removeFileAtPath([appBundleAppPath stringByAppendingPathComponent:appName]);
+                //                removeFileAtPath([appBundleAppPath stringByAppendingPathComponent:appName]);
                 
                 moveFile([appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_DECRYPTED"]], [appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]);
             }
             
             NSMutableArray* args2 = [NSMutableArray new];
             NSString *binaryPath2 = [bundlePath stringByAppendingPathComponent:@"insert_dylib"];
-            [args2 addObject:@"@executable_path/appstorehelper.dylib"];
-            [args2 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
-            [args2 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
-            [args2 addObject:@"--inplace"];
-            [args2 addObject:@"--all-yes"];
-            [args2 addObject:@"--overwrite"];
-            [args2 addObject:@"--no-strip-codesig"];
-            spawnRoot(binaryPath2, args2, nil, nil);
+            NSMutableArray* args3 = [NSMutableArray new];
+            NSString *binaryPath3 = [bundlePath stringByAppendingPathComponent:@"exepatch"];
+            if (strstr(argv[2], "com.apple.") == NULL) {
+                [args2 addObject:@"@executable_path/appstorehelper.dylib"];
+                [args2 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
+                [args2 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
+                [args2 addObject:@"--inplace"];
+                [args2 addObject:@"--all-yes"];
+                [args2 addObject:@"--overwrite"];
+                [args2 addObject:@"--no-strip-codesig"];
+                spawnRoot(binaryPath2, args2, nil, nil);
+            } else if (strcmp(argv[2], "com.apple.shortcuts") == 0) {
+                [args3 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
+                spawnRoot(binaryPath3, args3, nil, nil);
+            } else {
+                [args2 addObject:@"/System/Library/VideoCodecs/lib/hooks/generalhook.dylib"];
+                [args2 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
+                [args2 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
+                [args2 addObject:@"--inplace"];
+                [args2 addObject:@"--all-yes"];
+                [args2 addObject:@"--overwrite"];
+                [args2 addObject:@"--no-strip-codesig"];
+                spawnRoot(binaryPath2, args2, nil, nil);
+            }
             
             NSMutableArray* args8 = [NSMutableArray new];
             NSString *binaryPath8 = [bundlePath stringByAppendingPathComponent:@"ldid"];
