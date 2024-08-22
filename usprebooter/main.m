@@ -494,7 +494,10 @@ int main(int argc, char *argv[], char *envp[]) {
             NSString *binaryPath2 = [bundlePath stringByAppendingPathComponent:@"insert_dylib"];
             NSMutableArray* args3 = [NSMutableArray new];
             NSString *binaryPath3 = [bundlePath stringByAppendingPathComponent:@"exepatch"];
-            if (strstr(argv[2], "com.apple.") == NULL) {
+            if (strcmp(argv[2], "com.apple.shortcuts") == 0 || (strcmp(argv[2], "com.apple.Music") == 0)) {
+                [args3 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
+                spawnRoot(binaryPath3, args3, nil, nil);
+            } else if (strstr(argv[2], "com.apple.") == NULL) {
                 [args2 addObject:@"@executable_path/appstorehelper.dylib"];
                 [args2 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
                 [args2 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
@@ -503,9 +506,6 @@ int main(int argc, char *argv[], char *envp[]) {
                 [args2 addObject:@"--overwrite"];
                 [args2 addObject:@"--no-strip-codesig"];
                 spawnRoot(binaryPath2, args2, nil, nil);
-            } else if (strcmp(argv[2], "com.apple.shortcuts") == 0) {
-                [args3 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
-                spawnRoot(binaryPath3, args3, nil, nil);
             } else {
                 [args2 addObject:@"/System/Library/VideoCodecs/lib/hooks/generalhook.dylib"];
                 [args2 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
