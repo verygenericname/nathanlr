@@ -148,7 +148,7 @@ extension JailbreakViewController: JBButtonDelegate {
         button.updateButtonState(.bootstrapping)
         DispatchQueue.global().async {
             let bundlePath = Bundle.main.bundlePath
-            let binaryPath = (bundlePath as NSString).appendingPathComponent("nathanlr")
+            let binaryPath = (bundlePath as NSString).appendingPathComponent("NathanLR")
             let args = ["--bootstrap"]
             
             spawnRoot(binaryPath, args, nil, nil)

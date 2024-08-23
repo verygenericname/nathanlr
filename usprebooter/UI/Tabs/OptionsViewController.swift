@@ -19,7 +19,7 @@ class OptionsViewController: UIViewController, UITableViewDelegate, UITableViewD
         
         let confirmAction = UIAlertAction(title: "Yes", style: .destructive) { _ in
             let bundlePath = Bundle.main.bundlePath
-            let binaryPath = (bundlePath as NSString).appendingPathComponent("nathanlr")
+            let binaryPath = (bundlePath as NSString).appendingPathComponent("NathanLR")
             let args = ["--debootstrap"]
             
             spawnRoot(binaryPath, args, nil, nil)

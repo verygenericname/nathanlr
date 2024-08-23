@@ -170,7 +170,11 @@ class CreditsData {
                               role: "Several hooks from Dopamine",
                               pfpURL: URL(string: "https://github.com/opa334.png")!,
                               socialLink: URL(string: "https://twitter.com/opa334dev")!)
+        let d = CreditsPerson(name: "timbovill",
+                              role: "Icon",
+                              pfpURL: URL(string: "https://cdn.discordapp.com/avatars/858923165379199007/d556be3fb98bc7fc37f79c8cceb63b1e?size=1024")!,
+                              socialLink: nil)
         
-        return [N, T, r, O, l, L, e, R, s, t, o]
+        return [N, T, r, O, d, l, L, e, R, s, t, o]
     }
 }

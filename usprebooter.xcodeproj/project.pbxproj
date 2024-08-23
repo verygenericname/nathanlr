@@ -68,7 +68,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		C811229A2B15E7BB00AD077B /* nathanlr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = nathanlr.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C811229A2B15E7BB00AD077B /* NathanLR.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NathanLR.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C81122AB2B15E7BD00AD077B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C81122DD2B16C9CB00AD077B /* troller.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = troller.h; sourceTree = "<group>"; };
 		C81122DE2B16C9CC00AD077B /* troller.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = troller.m; sourceTree = "<group>"; };
@@ -277,7 +277,7 @@
 		C811229B2B15E7BB00AD077B /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				C811229A2B15E7BB00AD077B /* nathanlr.app */,
+				C811229A2B15E7BB00AD077B /* NathanLR.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -737,9 +737,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		C81122992B15E7BB00AD077B /* nathanlr */ = {
+		C81122992B15E7BB00AD077B /* NathanLR */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C81122C42B15E7BD00AD077B /* Build configuration list for PBXNativeTarget "nathanlr" */;
+			buildConfigurationList = C81122C42B15E7BD00AD077B /* Build configuration list for PBXNativeTarget "NathanLR" */;
 			buildPhases = (
 				C81122962B15E7BB00AD077B /* Sources */,
 				C81122972B15E7BB00AD077B /* Frameworks */,
@@ -749,12 +749,12 @@
 			);
 			dependencies = (
 			);
-			name = nathanlr;
+			name = NathanLR;
 			packageProductDependencies = (
 				D801E0EC2C6D5FB500CE0B46 /* Markdown */,
 			);
 			productName = usprebooter;
-			productReference = C811229A2B15E7BB00AD077B /* nathanlr.app */;
+			productReference = C811229A2B15E7BB00AD077B /* NathanLR.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -789,7 +789,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				C81122992B15E7BB00AD077B /* nathanlr */,
+				C81122992B15E7BB00AD077B /* NathanLR */,
 			);
 		};
 /* End PBXProject section */
@@ -1108,7 +1108,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		C81122C42B15E7BD00AD077B /* Build configuration list for PBXNativeTarget "nathanlr" */ = {
+		C81122C42B15E7BD00AD077B /* Build configuration list for PBXNativeTarget "NathanLR" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C81122C52B15E7BD00AD077B /* Debug */,

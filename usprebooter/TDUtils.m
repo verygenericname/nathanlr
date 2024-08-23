@@ -28,7 +28,7 @@ NSMutableArray *appList(void) {
         
         if ([appBundlePath containsString:@"/var/containers/Bundle/Application/"]) {
             if ([name isEqualToString:@"TrollStore"]) return;
-            if ([name isEqualToString:@"nathanlr"]) return;
+            if ([name isEqualToString:@"NathanLR"]) return;
             if (fileExists([appBundleAppPath stringByAppendingString:@"/.TrollStorePersistenceHelper"])) return;
         } else {
             if (![proxy atl_isUserApplication]) return;
@@ -135,7 +135,7 @@ void decryptApp(NSDictionary *app) {
             [args addObject:@"--appinject"];
             [args addObject:bundleID];
             NSString *bundlePath = [[NSBundle mainBundle] bundlePath];
-            NSString *binaryPath = [bundlePath stringByAppendingPathComponent:@"nathanlr"];
+            NSString *binaryPath = [bundlePath stringByAppendingPathComponent:@"NathanLR"];
             spawnRoot(binaryPath, args, nil, nil);
 
             dispatch_async(dispatch_get_main_queue(), ^{
