@@ -3,6 +3,7 @@
 #import "LSApplicationProxy+AltList.h"
 #import "util.h"
 #import "TSPresentationDelegate.h"
+#import "TDRootViewController.h"
 
 UIWindow *alertWindow = NULL;
 UIWindow *kw = NULL;
@@ -67,6 +68,19 @@ NSUInteger iconFormat(void) {
 
 NSArray *sysctl_ps(void);
 
+
+void killProcessID(NSString *appName) {
+    NSArray *processes = sysctl_ps();
+    for (NSDictionary *process in processes) {
+        NSString *proc_name = process[@"proc_name"];
+        if ([proc_name isEqualToString:appName]) {
+            killall2(appName, YES, NO);
+            break;
+        }
+    }
+    return;
+}
+
 pid_t findProcessID(NSString *appName) {
     pid_t pid = -1;
     NSArray *processes = sysctl_ps();
@@ -80,20 +94,21 @@ pid_t findProcessID(NSString *appName) {
     return pid;
 }
 
-//void launchAndCheckProcess(NSString *appName, NSString *bundleID) {
-//    pid_t pid = -1;
-//    killall2(appName, YES, NO);
-//    while (pid == -1) {
-//        pid = findProcessID(appName);
-//        if (pid == -1) {
-//
-//            [[UIApplication sharedApplication] launchApplicationWithIdentifier:bundleID suspended:YES];
-//
-//            [NSThread sleepForTimeInterval:1.0];
-//        }
-//    }
-//    NSLog(@"Process %@ with PID %d found!", appName, pid);
-//}
+void launchAndCheckProcess(NSString *appName, NSString *bundleID) {
+    pid_t pid = -1;
+    int tries = 0;
+    killProcessID(appName);
+    while (pid == -1 && tries < 5) {
+        pid = findProcessID(appName);
+        if (pid == -1) {
+            tries++;
+            [[UIApplication sharedApplication] launchApplicationWithIdentifier:bundleID suspended:YES];
+
+            [NSThread sleepForTimeInterval:2.0];
+        }
+    }
+    NSLog(@"Process %@ with PID %d found!", appName, pid);
+}
 
 NSString* findAppPathInBundlePath(NSString* bundlePath);
 
@@ -129,8 +144,13 @@ void decryptApp(NSDictionary *app) {
 //        NSLog(@"[trolldecrypt] executable: %@", executable);
 //        NSLog(@"[trolldecrypt] binaryName: %@", binaryName);
         
-        [[UIApplication sharedApplication] launchApplicationWithIdentifier:bundleID suspended:YES];
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+//        [[UIApplication sharedApplication] launchApplicationWithIdentifier:bundleID suspended:YES];
+        BOOL isExec = [[NSFileManager defaultManager] isExecutableFileAtPath:[appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]];
+        
+        if (isExec || !fileExists([appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"])) {
+            launchAndCheckProcess(binaryName, bundleID);
+        }
+//        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
             NSMutableArray* args = [NSMutableArray new];
             [args addObject:@"--appinject"];
             [args addObject:bundleID];
@@ -144,8 +164,9 @@ void decryptApp(NSDictionary *app) {
                         UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil];
                         [doneController addAction:cancel];
                         [TSPresentationDelegate presentViewController:doneController animated:YES completion:nil];
+                        [[NSNotificationCenter defaultCenter] postNotificationName:@"refreshNotify" object:nil];
                 }];
             });
-    });
+//    });
     });
 }

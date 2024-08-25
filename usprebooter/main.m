@@ -441,21 +441,6 @@ int main(int argc, char *argv[], char *envp[]) {
             
             //            copyFile([appBundleAppPath stringByAppendingPathComponent:appName], [appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR_BACKUP"]]);
             
-            pid_t pid = -1;
-            NSArray *processes = sysctl_ps();
-            for (NSDictionary *process in processes) {
-                NSString *proc_name = process[@"proc_name"];
-                if ([proc_name isEqualToString:appName]) {
-                    pid = [process[@"pid"] intValue];
-                    break;
-                }
-            }
-            
-            if (pid == -1) {
-                printf("app is not running, fail");
-                exit(1);
-            }
-            
             if (fileExists([appBundlePath stringByAppendingPathComponent:@"_TrollStore"])) {
                 removeFileAtPath(@"/tmp/merge_ent.plist");
                 copyFile([bundlePath stringByAppendingPathComponent:@"merge_ent.plist"], @"/tmp/merge_ent.plist");
@@ -472,6 +457,20 @@ int main(int argc, char *argv[], char *envp[]) {
                 copyFile([appBundleAppPath stringByAppendingPathComponent:appName], [appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]);
                 replaceSubtype([appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]);
             } else {
+                pid_t pid = -1;
+                NSArray *processes = sysctl_ps();
+                for (NSDictionary *process in processes) {
+                    NSString *proc_name = process[@"proc_name"];
+                    if ([proc_name isEqualToString:appName]) {
+                        pid = [process[@"pid"] intValue];
+                        break;
+                    }
+                }
+                
+                if (pid == -1) {
+                    printf("app is not running, fail");
+                    exit(1);
+                }
                 removeFileAtPath(@"/tmp/merge_ent.plist");
                 copyFile([bundlePath stringByAppendingPathComponent:@"merge_ent.plist"], @"/tmp/merge_ent.plist");
                 NSMutableDictionary *plistDict = [NSMutableDictionary dictionaryWithContentsOfFile:@"/tmp/merge_ent.plist"];

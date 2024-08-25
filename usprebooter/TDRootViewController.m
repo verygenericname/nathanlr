@@ -23,11 +23,27 @@
     searchController.searchBar.placeholder = @"Search Apps";
     self.navigationItem.searchController = searchController;
     self.definesPresentationContext = YES;
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(refreshNotify:) name:@"refreshNotify" object:nil];
+}
+
+- (void)refreshNotify:(NSNotification *)notification {
+    [self refreshApps:self.refreshControl];
+}
+
+- (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 - (void)refreshApps:(UIRefreshControl *)refreshControl {
-    self.apps = appList();
-    self.filteredApps = self.apps;
+    NSArray *newApps = appList();
+    self.apps = newApps;
+
+    if (self.isSearching) {
+        [self updateSearchResultsForSearchController:self.navigationItem.searchController];
+    } else {
+        self.filteredApps = self.apps;
+    }
+    
     [self.tableView reloadData];
     [refreshControl endRefreshing];
 }
@@ -81,15 +97,16 @@
 
 - (void)updateSearchResultsForSearchController:(UISearchController *)searchController {
     NSString *searchText = searchController.searchBar.text.lowercaseString;
+    self.isSearching = (searchText.length > 0);
     
-    if (searchText.length == 0) {
-        self.filteredApps = self.apps;
-    } else {
+    if (self.isSearching) {
         NSPredicate *predicate = [NSPredicate predicateWithBlock:^BOOL(NSDictionary *app, NSDictionary *bindings) {
             NSString *appName = app[@"name"];
             return [appName.lowercaseString containsString:searchText];
         }];
         self.filteredApps = [self.apps filteredArrayUsingPredicate:predicate];
+    } else {
+        self.filteredApps = self.apps;
     }
     
     [self.tableView reloadData];
