@@ -10,7 +10,7 @@
 #import <Foundation/Foundation.h>
 void respring(void);
 void crashSpringBoard(void);
-int spawnRoot(NSString* path, NSArray* args, NSString** stdOut, NSString** stdErr);
+int spawnRoot(NSString* path, NSArray* args, NSString** stdOut, NSString** stdErr, int* exitCode);
 void killall2(NSString* processName, BOOL softly, BOOL crash);
 char* return_boot_manifest_hash_main(void);
 

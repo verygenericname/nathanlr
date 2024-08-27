@@ -22,7 +22,7 @@ class OptionsViewController: UIViewController, UITableViewDelegate, UITableViewD
             let binaryPath = (bundlePath as NSString).appendingPathComponent("NathanLR")
             let args = ["--debootstrap"]
             
-            spawnRoot(binaryPath, args, nil, nil)
+            spawnRoot(binaryPath, args, nil, nil, nil)
             UIApplication.shared.perform(#selector(NSXPCConnection.suspend))
             exit(0)
         }
@@ -125,7 +125,7 @@ class OptionsViewController: UIViewController, UITableViewDelegate, UITableViewD
         case "UICache":
             let binaryPath = "/var/jb/usr/bin/uicache"
             let args = ["-a"]
-            spawnRoot(binaryPath, args, nil, nil)
+            spawnRoot(binaryPath, args, nil, nil, nil)
         case "Enter Safe Mode":
             crashSpringBoard()
             exit(0)

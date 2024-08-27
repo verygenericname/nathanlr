@@ -56,7 +56,7 @@ int posix_spawnattr_set_persona_np(const posix_spawnattr_t* __restrict, uid_t, u
 int posix_spawnattr_set_persona_uid_np(const posix_spawnattr_t* __restrict, uid_t);
 int posix_spawnattr_set_persona_gid_np(const posix_spawnattr_t* __restrict, uid_t);
 
-int spawnRoot(NSString* path, NSArray* args, NSString** stdOut, NSString** stdErr)
+int spawnRoot(NSString* path, NSArray* args, NSString** stdOut, NSString** stdErr, int* exitCode)
 {
     NSMutableArray* argsM = args.mutableCopy ?: [NSMutableArray new];
     [argsM insertObject:path.lastPathComponent atIndex:0];
@@ -108,7 +108,6 @@ int spawnRoot(NSString* path, NSArray* args, NSString** stdOut, NSString** stdEr
     
     if(spawnError != 0)
     {
-        NSLog(@"We down");
         NSLog(@"posix_spawn error %d\n", spawnError);
         return spawnError;
     }
@@ -120,8 +119,6 @@ int spawnRoot(NSString* path, NSArray* args, NSString** stdOut, NSString** stdEr
             NSLog(@"Child status %d", WEXITSTATUS(status));
         } else
         {
-//            perror("waitpid");
-//            NSLog(@"waitpid returned %@", waitpids);
             return -222;
         }
     } while (!WIFEXITED(status) && !WIFSIGNALED(status));
@@ -139,10 +136,13 @@ int spawnRoot(NSString* path, NSArray* args, NSString** stdOut, NSString** stdEr
         NSString* errorOutput = getNSStringFromFile(outErr[0]);
         *stdErr = errorOutput;
     }
-//    NSLog(@"%@", status);
+
+    if (exitCode) {
+        *exitCode = WEXITSTATUS(status);
+    }
+
     return WEXITSTATUS(status);
 }
-
 
 void enumerateProcessesUsingBlock(void (^enumerator)(pid_t pid, NSString* executablePath, BOOL* stop))
 {

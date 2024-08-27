@@ -110,8 +110,6 @@ void launchAndCheckProcess(NSString *appName, NSString *bundleID) {
     NSLog(@"Process %@ with PID %d found!", appName, pid);
 }
 
-NSString* findAppPathInBundlePath(NSString* bundlePath);
-
 void decryptApp(NSDictionary *app) {
     dispatch_async(dispatch_get_main_queue(), ^{
         [TSPresentationDelegate startActivity:@"Injecting..."];
@@ -127,16 +125,6 @@ void decryptApp(NSDictionary *app) {
 
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 //        NSLog(@"[trolldecrypt] inside decryption thread.");
-        NSFileManager *fileManager = [NSFileManager defaultManager];
-        NSFileManager *fileManager2 = [NSFileManager defaultManager];
-        NSString *bundleID = app[@"bundleID"];
-        NSString *name = app[@"name"];
-        NSString *version = app[@"version"];
-        NSString *executable = app[@"executable"];
-        NSString *binaryName = [executable lastPathComponent];
-        
-        NSString *appBundlePath = appPath(bundleID);
-        NSString *appBundleAppPath = findAppPathInBundlePath(appBundlePath);
 
 //        NSLog(@"[trolldecrypt] bundleID: %@", bundleID);
 //        NSLog(@"[trolldecrypt] name: %@", name);
@@ -145,28 +133,50 @@ void decryptApp(NSDictionary *app) {
 //        NSLog(@"[trolldecrypt] binaryName: %@", binaryName);
         
 //        [[UIApplication sharedApplication] launchApplicationWithIdentifier:bundleID suspended:YES];
-        BOOL isExec = [[NSFileManager defaultManager] isExecutableFileAtPath:[appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]];
+        NSString *bundleID = app[@"bundleID"];
+        NSString *name = app[@"name"];
+        NSString *version = app[@"version"];
+        NSString *executable = app[@"executable"];
+        NSString *binaryName = [executable lastPathComponent];
         
-        if (isExec || !fileExists([appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"])) {
-            launchAndCheckProcess(binaryName, bundleID);
-        }
-//        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            NSMutableArray* args = [NSMutableArray new];
-            [args addObject:@"--appinject"];
-            [args addObject:bundleID];
-            NSString *bundlePath = [[NSBundle mainBundle] bundlePath];
-            NSString *binaryPath = [bundlePath stringByAppendingPathComponent:@"NathanLR"];
-            spawnRoot(binaryPath, args, nil, nil);
-
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [TSPresentationDelegate stopActivityWithCompletion:^{
-                        doneController = [UIAlertController alertControllerWithTitle:@"Done toggling Tweaks" message:@"If your tweaks are not there, try toggling on again until it works.\n(The injector is prone to crashes don't know why)\nIf you have injected into this app, it will not work in normal mode. Please uninject if you would like to use it in normal mode. (If it's a trollstore app it will just not have tweaks in normal mode.)" preferredStyle:UIAlertControllerStyleAlert];
-                        UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil];
-                        [doneController addAction:cancel];
-                        [TSPresentationDelegate presentViewController:doneController animated:YES completion:nil];
-                        [[NSNotificationCenter defaultCenter] postNotificationName:@"refreshNotify" object:nil];
-                }];
-            });
-//    });
+        NSString *appBundlePath = appPath(bundleID);
+        NSString *appBundleAppPath = findAppPathInBundlePath(appBundlePath);
+            int tries = 0;
+            int status = -1;
+            while (status != 0 && tries <= 5) {
+                BOOL isExec = [[NSFileManager defaultManager] isExecutableFileAtPath:[appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]];
+                if (isExec || !fileExists([appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"])) {
+                    launchAndCheckProcess(binaryName, bundleID);
+                }
+                //        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                NSMutableArray* args = [NSMutableArray new];
+                [args addObject:@"--appinject"];
+                [args addObject:bundleID];
+                NSString *bundlePath = [[NSBundle mainBundle] bundlePath];
+                NSString *binaryPath = [bundlePath stringByAppendingPathComponent:@"NathanLR"];
+                spawnRoot(binaryPath, args, nil, nil, &status);
+                if (![[NSFileManager defaultManager] isExecutableFileAtPath:[appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]] || tries == 5) {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        if(status != 0) {
+                            [TSPresentationDelegate stopActivityWithCompletion:^{
+                                doneController = [UIAlertController alertControllerWithTitle:@"Failed toggling Tweaks" message:@"Please try again." preferredStyle:UIAlertControllerStyleAlert];
+                                UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil];
+                                [doneController addAction:cancel];
+                                [TSPresentationDelegate presentViewController:doneController animated:YES completion:nil];
+                            }];
+                        } else {
+                            [TSPresentationDelegate stopActivityWithCompletion:^{
+                                doneController = [UIAlertController alertControllerWithTitle:@"Done toggling Tweaks" message:nil preferredStyle:UIAlertControllerStyleAlert];
+                                UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil];
+                                [doneController addAction:cancel];
+                                [TSPresentationDelegate presentViewController:doneController animated:YES completion:nil];
+                                [[NSNotificationCenter defaultCenter] postNotificationName:@"refreshNotify" object:nil];
+                            }];
+                        }
+                    });
+                }
+                tries++;
+            }
+            //    });
     });
 }

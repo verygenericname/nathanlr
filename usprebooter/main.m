@@ -325,6 +325,10 @@ BOOL fileExists(NSString *filePath) {
     return [fileManager fileExistsAtPath:filePath];
 }
 
+void signal_handler(int signal) {
+    exit(128 + signal);
+}
+
 int main(int argc, char *argv[], char *envp[]) {
     NSString * appDelegateClassName;
     @autoreleasepool {
@@ -338,7 +342,7 @@ int main(int argc, char *argv[], char *envp[]) {
             [args addObject:@"-d"];
             [args addObject:[NSString stringWithFormat:@"%s/", return_boot_manifest_hash_main()]];
             
-            spawnRoot(binaryPath, args, nil, nil);
+            spawnRoot(binaryPath, args, nil, nil, nil);
             
             NSString *defaultSources = @"Types: deb\n"
                         @"URIs: https://repo.chariz.com/\n"
@@ -366,7 +370,7 @@ int main(int argc, char *argv[], char *envp[]) {
             NSMutableArray* args2 = [NSMutableArray new];
             [args2 addObject:@"/var/jb/prep_bootstrap.sh"];
             
-            spawnRoot(@"/var/jb/bin/sh", args2, nil, nil);
+            spawnRoot(@"/var/jb/bin/sh", args2, nil, nil, nil);
             
             [@"" writeToFile:@"/var/jb/.installed_dopamine" atomically:NO encoding:NSUTF8StringEncoding error:nil];
             [@"" writeToFile:@"/var/jb/.installed_nathanlr" atomically:NO encoding:NSUTF8StringEncoding error:nil];
@@ -380,6 +384,8 @@ int main(int argc, char *argv[], char *envp[]) {
             sync();
             exit(0);
         } else if (argc > 1 && strcmp(argv[1], "--appinject") == 0) {
+            signal(SIGSEGV, signal_handler);
+            signal(SIGABRT, signal_handler);
             NSString *argv2 = [NSString stringWithUTF8String:argv[2]];
             NSString *appBundlePath = appPath(argv2);
             NSString *appBundleAppPath = findAppPathInBundlePath(appBundlePath);
@@ -417,7 +423,7 @@ int main(int argc, char *argv[], char *envp[]) {
             [args5 addObject:@"-i"];
             [args5 addObject:[appBundleAppPath stringByAppendingPathComponent:appName]];
             [args5 addObject:@"-c"];
-            spawnRoot(binaryPath5, args5, &chomaOutput, nil);
+            spawnRoot(binaryPath5, args5, &chomaOutput, nil, nil);
             
             NSString *cleanedOutput = [[chomaOutput componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] componentsJoinedByString:@""];
             
@@ -436,7 +442,7 @@ int main(int argc, char *argv[], char *envp[]) {
                 [args addObject:@"-r"];
                 [args addObject:@"-t"];
                 [args addObject:cleanedOutput];
-                spawnRoot(binaryPath, args, nil, nil);
+                spawnRoot(binaryPath, args, nil, nil, nil);
             }
             
             //            copyFile([appBundleAppPath stringByAppendingPathComponent:appName], [appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR_BACKUP"]]);
@@ -495,7 +501,7 @@ int main(int argc, char *argv[], char *envp[]) {
             NSString *binaryPath3 = [bundlePath stringByAppendingPathComponent:@"exepatch"];
             if (strcmp(argv[2], "com.apple.shortcuts") == 0 || (strcmp(argv[2], "com.apple.Music") == 0)) {
                 [args3 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
-                spawnRoot(binaryPath3, args3, nil, nil);
+                spawnRoot(binaryPath3, args3, nil, nil, nil);
             } else if (strstr(argv[2], "com.apple.") == NULL) {
                 [args2 addObject:@"@executable_path/appstorehelper.dylib"];
                 [args2 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
@@ -504,7 +510,7 @@ int main(int argc, char *argv[], char *envp[]) {
                 [args2 addObject:@"--all-yes"];
                 [args2 addObject:@"--overwrite"];
                 [args2 addObject:@"--no-strip-codesig"];
-                spawnRoot(binaryPath2, args2, nil, nil);
+                spawnRoot(binaryPath2, args2, nil, nil, nil);
             } else {
                 [args2 addObject:@"/System/Library/VideoCodecs/lib/hooks/generalhook.dylib"];
                 [args2 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
@@ -513,7 +519,7 @@ int main(int argc, char *argv[], char *envp[]) {
                 [args2 addObject:@"--all-yes"];
                 [args2 addObject:@"--overwrite"];
                 [args2 addObject:@"--no-strip-codesig"];
-                spawnRoot(binaryPath2, args2, nil, nil);
+                spawnRoot(binaryPath2, args2, nil, nil, nil);
             }
             
             NSMutableArray* args8 = [NSMutableArray new];
@@ -522,7 +528,7 @@ int main(int argc, char *argv[], char *envp[]) {
             [args8 addObject:[@"-S" stringByAppendingString:@"/tmp/merge_ent.plist"]];
             [args8 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
             [args8 addObject:[@"-I" stringByAppendingString:argv2]];
-            spawnRoot(binaryPath8, args8, nil, nil);
+            spawnRoot(binaryPath8, args8, nil, nil, nil);
             removeFileAtPath(@"/tmp/merge_ent.plist");
             
             NSMutableArray* args9 = [NSMutableArray new];
@@ -536,7 +542,7 @@ int main(int argc, char *argv[], char *envp[]) {
                 [args9 addObject:@"-t"];
                 [args9 addObject:cleanedOutput];
             }
-            spawnRoot(binaryPath9, args9, nil, nil);
+            spawnRoot(binaryPath9, args9, nil, nil, nil);
             
             addExecutePermission([appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]);
             removeExecutePermission([appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]);
@@ -546,23 +552,9 @@ int main(int argc, char *argv[], char *envp[]) {
             exit(0);
         }
         
-        if (argc > 1 && strcmp(argv[1], "--jit") == 0) {
-                ptrace(0, 0, 0, 0);
-                exit(0);
-            } else {
-                pid_t pid;
-                char *modified_argv[] = {argv[0], "--jit", NULL };
-                int ret = posix_spawnp(&pid, argv[0], NULL, NULL, modified_argv, envp);
-                if (ret == 0) {
-                    waitpid(pid, NULL, WUNTRACED);
-                    ptrace(11, pid, 0, 0);
-                    kill(pid, SIGTERM);
-                    wait(NULL);
-                }
-            }
         NSString *processPath = executablePathForPID(1);
         if (processPath && ![processPath isEqualToString:@"/sbin/launchd"]) {
-            dlopen("/var/jb/usr/lib/TweakInject.dylib", RTLD_NOW | RTLD_GLOBAL);
+            dlopen("/System/Library/VideoCodecs/lib/hooks/generalhook.dylib", RTLD_NOW | RTLD_GLOBAL);
         }
         // Setup code that might create autoreleased objects goes here.
         appDelegateClassName = NSStringFromClass([AppDelegate class]);
