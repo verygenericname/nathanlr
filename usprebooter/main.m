@@ -427,12 +427,40 @@ int main(int argc, char *argv[], char *envp[]) {
             
             NSString *cleanedOutput = [[chomaOutput componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] componentsJoinedByString:@""];
             
-            if (strstr(argv[2], "com.apple.") == NULL) {
+            if (strstr(argv[2], "com.apple.supportapp") != NULL ||
+                 strstr(argv[2], "com.apple.store.Jolly") != NULL ||
+                 strstr(argv[2], "com.apple.Keynote") != NULL ||
+                 strstr(argv[2], "com.apple.iMovie") != NULL ||
+                 strstr(argv[2], "com.apple.mobilegarageband") != NULL ||
+                 strstr(argv[2], "com.apple.Pages") != NULL ||
+                 strstr(argv[2], "com.apple.Numbers") != NULL ||
+                 strstr(argv[2], "com.apple.music.classical") != NULL) {
+                copyFile(@"/var/jb/basebins/appstorehelper.dylib", [appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]);
+            } else if (strstr(argv[2], "com.apple.") == NULL) {
                 copyFile(@"/var/jb/basebins/appstorehelper.dylib", [appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]);
             } else {
                 [@"" writeToFile:[appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"] atomically:NO encoding:NSUTF8StringEncoding error:nil];
             }
-            if (strstr(argv[2], "com.apple.") == NULL) {
+            
+            if (strstr(argv[2], "com.apple.supportapp") != NULL ||
+                 strstr(argv[2], "com.apple.store.Jolly") != NULL ||
+                 strstr(argv[2], "com.apple.Keynote") != NULL ||
+                 strstr(argv[2], "com.apple.iMovie") != NULL ||
+                 strstr(argv[2], "com.apple.mobilegarageband") != NULL ||
+                 strstr(argv[2], "com.apple.Pages") != NULL ||
+                 strstr(argv[2], "com.apple.Numbers") != NULL ||
+                 strstr(argv[2], "com.apple.music.classical") != NULL) {
+                NSMutableArray* args = [NSMutableArray new];
+                NSString *binaryPath = [bundlePath stringByAppendingPathComponent:@"ct_bypass"];
+                [args addObject:@"-i"];
+                [args addObject:[appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]];
+                [args addObject:@"-o"];
+                [args addObject:[appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]];
+                [args addObject:@"-r"];
+                [args addObject:@"-t"];
+                [args addObject:cleanedOutput];
+                spawnRoot(binaryPath, args, nil, nil, nil);
+            } else if (strstr(argv[2], "com.apple.") == NULL) {
                 NSMutableArray* args = [NSMutableArray new];
                 NSString *binaryPath = [bundlePath stringByAppendingPathComponent:@"ct_bypass"];
                 [args addObject:@"-i"];
@@ -454,7 +482,15 @@ int main(int argc, char *argv[], char *envp[]) {
                 [plistDict removeObjectForKey:@"com.apple.private.security.container-required"];
                 [plistDict writeToFile:@"/tmp/merge_ent.plist" atomically:YES];
                 copyFile([appBundleAppPath stringByAppendingPathComponent:appName], [appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]);
-            } else if (strstr(argv[2], "com.apple.") != NULL) {
+            } else if (strstr(argv[2], "com.apple.") != NULL &&
+                       strstr(argv[2], "com.apple.supportapp") == NULL &&
+                       strstr(argv[2], "com.apple.store.Jolly") == NULL &&
+                       strstr(argv[2], "com.apple.Keynote") == NULL &&
+                       strstr(argv[2], "com.apple.iMovie") == NULL &&
+                       strstr(argv[2], "com.apple.mobilegarageband") == NULL &&
+                       strstr(argv[2], "com.apple.Pages") == NULL &&
+                       strstr(argv[2], "com.apple.Numbers") == NULL &&
+                       strstr(argv[2], "com.apple.music.classical") == NULL) {
                 removeFileAtPath(@"/tmp/merge_ent.plist");
                 copyFile([bundlePath stringByAppendingPathComponent:@"merge_ent.plist"], @"/tmp/merge_ent.plist");
                 NSMutableDictionary *plistDict = [NSMutableDictionary dictionaryWithContentsOfFile:@"/tmp/merge_ent.plist"];
@@ -499,20 +535,19 @@ int main(int argc, char *argv[], char *envp[]) {
             NSString *binaryPath2 = [bundlePath stringByAppendingPathComponent:@"insert_dylib"];
             NSMutableArray* args3 = [NSMutableArray new];
             NSString *binaryPath3 = [bundlePath stringByAppendingPathComponent:@"exepatch"];
-            if (strcmp(argv[2], "com.apple.shortcuts") == 0 || (strcmp(argv[2], "com.apple.Music") == 0)) {
+            if (strstr(argv[2], "com.apple.") != NULL &&
+                strstr(argv[2], "com.apple.supportapp") == NULL &&
+                strstr(argv[2], "com.apple.store.Jolly") == NULL &&
+                strstr(argv[2], "com.apple.Keynote") == NULL &&
+                strstr(argv[2], "com.apple.iMovie") == NULL &&
+                strstr(argv[2], "com.apple.mobilegarageband") == NULL &&
+                strstr(argv[2], "com.apple.Pages") == NULL &&
+                strstr(argv[2], "com.apple.Numbers") == NULL &&
+                strstr(argv[2], "com.apple.music.classical") == NULL) {
                 [args3 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
                 spawnRoot(binaryPath3, args3, nil, nil, nil);
-            } else if (strstr(argv[2], "com.apple.") == NULL) {
-                [args2 addObject:@"@executable_path/appstorehelper.dylib"];
-                [args2 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
-                [args2 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
-                [args2 addObject:@"--inplace"];
-                [args2 addObject:@"--all-yes"];
-                [args2 addObject:@"--overwrite"];
-                [args2 addObject:@"--no-strip-codesig"];
-                spawnRoot(binaryPath2, args2, nil, nil, nil);
             } else {
-                [args2 addObject:@"/System/Library/VideoCodecs/lib/hooks/generalhook.dylib"];
+                [args2 addObject:@"@executable_path/appstorehelper.dylib"];
                 [args2 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
                 [args2 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
                 [args2 addObject:@"--inplace"];
@@ -538,10 +573,21 @@ int main(int argc, char *argv[], char *envp[]) {
             [args9 addObject:@"-o"];
             [args9 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
             [args9 addObject:@"-r"];
-            if (strstr(argv[2], "com.apple.") == NULL) {
+            if (strstr(argv[2], "com.apple.supportapp") != NULL ||
+                 strstr(argv[2], "com.apple.store.Jolly") != NULL ||
+                 strstr(argv[2], "com.apple.Keynote") != NULL ||
+                 strstr(argv[2], "com.apple.iMovie") != NULL ||
+                 strstr(argv[2], "com.apple.mobilegarageband") != NULL ||
+                 strstr(argv[2], "com.apple.Pages") != NULL ||
+                 strstr(argv[2], "com.apple.Numbers") != NULL ||
+                 strstr(argv[2], "com.apple.music.classical") != NULL) {
+                [args9 addObject:@"-t"];
+                [args9 addObject:cleanedOutput];
+            } else if (strstr(argv[2], "com.apple.") == NULL) {
                 [args9 addObject:@"-t"];
                 [args9 addObject:cleanedOutput];
             }
+            
             spawnRoot(binaryPath9, args9, nil, nil, nil);
             
             addExecutePermission([appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]);
