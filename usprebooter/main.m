@@ -33,6 +33,7 @@
 - (BOOL)launchApplicationWithIdentifier:(id)arg1 suspended:(BOOL)arg2;
 @end
 
+int apply_coretrust_bypass_wrapper(const char *inputPath, const char *outputPath, char *teamID, char *appStoreBinary);
 int ptrace(int, int, int, int);
 NSString *executablePathForPID(pid_t pid) {
     char pathBuffer[PROC_PIDPATHINFO_MAXSIZE];
@@ -209,7 +210,7 @@ NSArray *sysctl_ps(void) {
     int numberOfProcesses = proc_listpids(PROC_ALL_PIDS, 0, NULL, 0);
     pid_t pids[numberOfProcesses];
     bzero(pids, sizeof(pids));
-    proc_listpids(PROC_ALL_PIDS, 0, pids, sizeof(pids));
+    proc_listpids(PROC_ALL_PIDS, 0, pids, (int)sizeof(pids));
     for (int i = 0; i < numberOfProcesses; ++i) {
         if (pids[i] == 0) { continue; }
         char pathBuffer[PROC_PIDPATHINFO_MAXSIZE];
@@ -329,6 +330,8 @@ void signal_handler(int signal) {
     exit(128 + signal);
 }
 
+static char *teamIDUse = NULL;
+
 int main(int argc, char *argv[], char *envp[]) {
     NSString * appDelegateClassName;
     @autoreleasepool {
@@ -439,7 +442,9 @@ int main(int argc, char *argv[], char *envp[]) {
             } else if (strstr(argv[2], "com.apple.") == NULL) {
                 copyFile(@"/var/jb/basebins/appstorehelper.dylib", [appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]);
             } else {
-                [@"" writeToFile:[appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"] atomically:NO encoding:NSUTF8StringEncoding error:nil];
+//                [@"" writeToFile:[appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"] atomically:NO encoding:NSUTF8StringEncoding error:nil];
+                copyFile(@"/var/jb/basebins/appstorehelper_system.dylib", [appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]);
+
             }
             
             if (strstr(argv[2], "com.apple.supportapp") != NULL ||
@@ -450,27 +455,9 @@ int main(int argc, char *argv[], char *envp[]) {
                  strstr(argv[2], "com.apple.Pages") != NULL ||
                  strstr(argv[2], "com.apple.Numbers") != NULL ||
                  strstr(argv[2], "com.apple.music.classical") != NULL) {
-                NSMutableArray* args = [NSMutableArray new];
-                NSString *binaryPath = [bundlePath stringByAppendingPathComponent:@"ct_bypass"];
-                [args addObject:@"-i"];
-                [args addObject:[appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]];
-                [args addObject:@"-o"];
-                [args addObject:[appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]];
-                [args addObject:@"-r"];
-                [args addObject:@"-t"];
-                [args addObject:cleanedOutput];
-                spawnRoot(binaryPath, args, nil, nil, nil);
+                apply_coretrust_bypass_wrapper([appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"].UTF8String, [appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"].UTF8String, (char *)cleanedOutput.UTF8String, NULL);
             } else if (strstr(argv[2], "com.apple.") == NULL) {
-                NSMutableArray* args = [NSMutableArray new];
-                NSString *binaryPath = [bundlePath stringByAppendingPathComponent:@"ct_bypass"];
-                [args addObject:@"-i"];
-                [args addObject:[appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]];
-                [args addObject:@"-o"];
-                [args addObject:[appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]];
-                [args addObject:@"-r"];
-                [args addObject:@"-t"];
-                [args addObject:cleanedOutput];
-                spawnRoot(binaryPath, args, nil, nil, nil);
+                apply_coretrust_bypass_wrapper([appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"].UTF8String, [appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"].UTF8String, (char *)cleanedOutput.UTF8String, NULL);
             }
             
             //            copyFile([appBundleAppPath stringByAppendingPathComponent:appName], [appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR_BACKUP"]]);
@@ -531,31 +518,31 @@ int main(int argc, char *argv[], char *envp[]) {
                 moveFile([appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_DECRYPTED"]], [appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]);
             }
             
-            NSMutableArray* args2 = [NSMutableArray new];
-            NSString *binaryPath2 = [bundlePath stringByAppendingPathComponent:@"insert_dylib"];
-            NSMutableArray* args3 = [NSMutableArray new];
-            NSString *binaryPath3 = [bundlePath stringByAppendingPathComponent:@"exepatch"];
-            if (strstr(argv[2], "com.apple.") != NULL &&
-                strstr(argv[2], "com.apple.supportapp") == NULL &&
-                strstr(argv[2], "com.apple.store.Jolly") == NULL &&
-                strstr(argv[2], "com.apple.Keynote") == NULL &&
-                strstr(argv[2], "com.apple.iMovie") == NULL &&
-                strstr(argv[2], "com.apple.mobilegarageband") == NULL &&
-                strstr(argv[2], "com.apple.Pages") == NULL &&
-                strstr(argv[2], "com.apple.Numbers") == NULL &&
-                strstr(argv[2], "com.apple.music.classical") == NULL) {
-                [args3 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
-                spawnRoot(binaryPath3, args3, nil, nil, nil);
-            } else {
-                [args2 addObject:@"@executable_path/appstorehelper.dylib"];
-                [args2 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
-                [args2 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
-                [args2 addObject:@"--inplace"];
-                [args2 addObject:@"--all-yes"];
-                [args2 addObject:@"--overwrite"];
-                [args2 addObject:@"--no-strip-codesig"];
-                spawnRoot(binaryPath2, args2, nil, nil, nil);
-            }
+//            NSMutableArray* args2 = [NSMutableArray new];
+//            NSString *binaryPath2 = [bundlePath stringByAppendingPathComponent:@"insert_dylib"];
+//            NSMutableArray* args3 = [NSMutableArray new];
+//            NSString *binaryPath3 = [bundlePath stringByAppendingPathComponent:@"exepatch"];
+//            if (strstr(argv[2], "com.apple.") != NULL &&
+//                strstr(argv[2], "com.apple.supportapp") == NULL &&
+//                strstr(argv[2], "com.apple.store.Jolly") == NULL &&
+//                strstr(argv[2], "com.apple.Keynote") == NULL &&
+//                strstr(argv[2], "com.apple.iMovie") == NULL &&
+//                strstr(argv[2], "com.apple.mobilegarageband") == NULL &&
+//                strstr(argv[2], "com.apple.Pages") == NULL &&
+//                strstr(argv[2], "com.apple.Numbers") == NULL &&
+//                strstr(argv[2], "com.apple.music.classical") == NULL) {
+//                [args3 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
+//                spawnRoot(binaryPath3, args3, nil, nil, nil);
+//            } else {
+//                [args2 addObject:@"@executable_path/appstorehelper.dylib"];
+//                [args2 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
+//                [args2 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
+//                [args2 addObject:@"--inplace"];
+//                [args2 addObject:@"--all-yes"];
+//                [args2 addObject:@"--overwrite"];
+//                [args2 addObject:@"--no-strip-codesig"];
+//                spawnRoot(binaryPath2, args2, nil, nil, nil);
+//            }
             
             NSMutableArray* args8 = [NSMutableArray new];
             NSString *binaryPath8 = [bundlePath stringByAppendingPathComponent:@"ldid"];
@@ -566,13 +553,6 @@ int main(int argc, char *argv[], char *envp[]) {
             spawnRoot(binaryPath8, args8, nil, nil, nil);
             removeFileAtPath(@"/tmp/merge_ent.plist");
             
-            NSMutableArray* args9 = [NSMutableArray new];
-            NSString *binaryPath9 = [bundlePath stringByAppendingPathComponent:@"ct_bypass"];
-            [args9 addObject:@"-i"];
-            [args9 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
-            [args9 addObject:@"-o"];
-            [args9 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
-            [args9 addObject:@"-r"];
             if (strstr(argv[2], "com.apple.supportapp") != NULL ||
                  strstr(argv[2], "com.apple.store.Jolly") != NULL ||
                  strstr(argv[2], "com.apple.Keynote") != NULL ||
@@ -581,14 +561,12 @@ int main(int argc, char *argv[], char *envp[]) {
                  strstr(argv[2], "com.apple.Pages") != NULL ||
                  strstr(argv[2], "com.apple.Numbers") != NULL ||
                  strstr(argv[2], "com.apple.music.classical") != NULL) {
-                [args9 addObject:@"-t"];
-                [args9 addObject:cleanedOutput];
+                teamIDUse = (char *)cleanedOutput.UTF8String;
             } else if (strstr(argv[2], "com.apple.") == NULL) {
-                [args9 addObject:@"-t"];
-                [args9 addObject:cleanedOutput];
+                teamIDUse = (char *)cleanedOutput.UTF8String;
             }
             
-            spawnRoot(binaryPath9, args9, nil, nil, nil);
+            apply_coretrust_bypass_wrapper([appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]].UTF8String, [appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]].UTF8String, teamIDUse, NULL);
             
             addExecutePermission([appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]);
             removeExecutePermission([appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]);

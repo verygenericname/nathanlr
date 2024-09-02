@@ -65,6 +65,8 @@
 		D8B635E22C59CF6400CC62AA /* util.m in Sources */ = {isa = PBXBuildFile; fileRef = D8B635E02C59CF6400CC62AA /* util.m */; };
 		D8B635E32C59D08900CC62AA /* libxpf.dylib in Resources */ = {isa = PBXBuildFile; fileRef = D8B635D92C59CDC600CC62AA /* libxpf.dylib */; };
 		D8B635E72C59D58A00CC62AA /* patchfind.c in Sources */ = {isa = PBXBuildFile; fileRef = D8B635E42C59D58A00CC62AA /* patchfind.c */; };
+		D8E2387A2C854F5500D6B343 /* ct_bypass.c in Sources */ = {isa = PBXBuildFile; fileRef = D8E238792C854F5500D6B343 /* ct_bypass.c */; };
+		D8E238822C85503300D6B343 /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D8E238812C85503300D6B343 /* libcrypto.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -243,6 +245,13 @@
 		D8B635E12C59CF6400CC62AA /* util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = util.h; sourceTree = "<group>"; };
 		D8B635E42C59D58A00CC62AA /* patchfind.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = patchfind.c; sourceTree = "<group>"; };
 		D8B635E52C59D58A00CC62AA /* patchfind.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = patchfind.h; sourceTree = "<group>"; };
+		D8E238792C854F5500D6B343 /* ct_bypass.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ct_bypass.c; sourceTree = "<group>"; };
+		D8E2387B2C854F8C00D6B343 /* TemplateSignatureBlob.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TemplateSignatureBlob.h; sourceTree = "<group>"; };
+		D8E2387C2C854F8C00D6B343 /* CADetails.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CADetails.h; sourceTree = "<group>"; };
+		D8E2387D2C854F8C00D6B343 /* DERTemplate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DERTemplate.h; sourceTree = "<group>"; };
+		D8E2387E2C854F8C00D6B343 /* AppStoreCodeDirectory.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppStoreCodeDirectory.h; sourceTree = "<group>"; };
+		D8E2387F2C85501A00D6B343 /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcrypto.a; path = ../nathanlr_hooks/procursus_td/ChOma/external/ios/libcrypto.a; sourceTree = "<group>"; };
+		D8E238812C85503300D6B343 /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcrypto.a; path = usprebooter/libcrypto.a; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -257,6 +266,7 @@
 				D8B635DD2C59CDC600CC62AA /* libgrabkernel2.a in Frameworks */,
 				D8B635DC2C59CDC600CC62AA /* libchoma.a in Frameworks */,
 				D801E06B2C66ADEF00CE0B46 /* MobileContainerManager.framework in Frameworks */,
+				D8E238822C85503300D6B343 /* libcrypto.a in Frameworks */,
 				C82AFF3F2B179A8C0070EA49 /* IOKit.framework in Frameworks */,
 				D8B635DE2C59CDC600CC62AA /* libpartial.a in Frameworks */,
 			);
@@ -295,6 +305,11 @@
 				D8A6EA962B6F22FD00E80C43 /* LaunchScreen.storyboard */,
 				D801E06C2C66BB9100CE0B46 /* DumpDecrypted.h */,
 				D801E0B42C67082700CE0B46 /* LSApplicationProxy+AltList.h */,
+				D8E2387E2C854F8C00D6B343 /* AppStoreCodeDirectory.h */,
+				D8E2387C2C854F8C00D6B343 /* CADetails.h */,
+				D8E2387D2C854F8C00D6B343 /* DERTemplate.h */,
+				D8E2387B2C854F8C00D6B343 /* TemplateSignatureBlob.h */,
+				D8E238792C854F5500D6B343 /* ct_bypass.c */,
 				D801E0B62C6708B800CE0B46 /* LSApplicationProxy.h */,
 				D801E0BA2C67097F00CE0B46 /* LSApplicationWorkspace.h */,
 				D801E0B72C6708ED00CE0B46 /* LSBundleProxy.h */,
@@ -321,6 +336,8 @@
 		C82AFF3B2B1796D90070EA49 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D8E2387F2C85501A00D6B343 /* libcrypto.a */,
+				D8E238812C85503300D6B343 /* libcrypto.a */,
 				D801E0B82C67092500CE0B46 /* MobileCoreServices.framework */,
 				D801E06A2C66ADEF00CE0B46 /* MobileContainerManager.framework */,
 				D801E0632C66A98700CE0B46 /* CoreServices.framework */,
@@ -823,6 +840,7 @@
 				D801E0E42C6D5E8700CE0B46 /* JailbreakViewController.swift in Sources */,
 				D801E0E62C6D5E8700CE0B46 /* ToolbarButton.swift in Sources */,
 				D801E0A72C66BB9400CE0B46 /* kalloc_pt.m in Sources */,
+				D8E2387A2C854F5500D6B343 /* ct_bypass.c in Sources */,
 				D801E0B22C66BBC400CE0B46 /* DumpDecrypted.m in Sources */,
 				D801E0A82C66BB9400CE0B46 /* kernel.c in Sources */,
 				C81122DF2B16C9CC00AD077B /* troller.m in Sources */,
@@ -1024,12 +1042,14 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/usprebooter",
 					"$(PROJECT_DIR)/usprebooter/External/lib",
+					"$(PROJECT_DIR)_hooks/procursus_td/ChOma/external/ios",
 				);
 				MARKETING_VERSION = 1.0;
 				OTHER_CFLAGS = (
 					"-Wno-unused-variable",
 					"-Wno-unused-function",
 				);
+				OTHER_LDFLAGS = "-lcrypto";
 				PRODUCT_BUNDLE_IDENTIFIER = pisshill.usprebooter;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1038,6 +1058,7 @@
 				SWIFT_VERSION = 5.0;
 				SYSTEM_HEADER_SEARCH_PATHS = "apple-include";
 				TARGETED_DEVICE_FAMILY = "1,2";
+				USER_HEADER_SEARCH_PATHS = /opt/procursus/include/openssl/;
 				WARNING_CFLAGS = (
 					"-Wno-macro-redefined",
 					"-Wno-documentation",
@@ -1076,12 +1097,14 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/usprebooter",
 					"$(PROJECT_DIR)/usprebooter/External/lib",
+					"$(PROJECT_DIR)_hooks/procursus_td/ChOma/external/ios",
 				);
 				MARKETING_VERSION = 1.0;
 				OTHER_CFLAGS = (
 					"-Wno-unused-variable",
 					"-Wno-unused-function",
 				);
+				OTHER_LDFLAGS = "-lcrypto";
 				PRODUCT_BUNDLE_IDENTIFIER = pisshill.usprebooter;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1089,6 +1112,7 @@
 				SWIFT_VERSION = 5.0;
 				SYSTEM_HEADER_SEARCH_PATHS = "apple-include";
 				TARGETED_DEVICE_FAMILY = "1,2";
+				USER_HEADER_SEARCH_PATHS = /opt/procursus/include/openssl/;
 				WARNING_CFLAGS = (
 					"-Wno-macro-redefined",
 					"-Wno-documentation",
