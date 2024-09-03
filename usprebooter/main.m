@@ -566,6 +566,12 @@ int main(int argc, char *argv[], char *envp[]) {
                         @"Components:\n";
             [defaultSources writeToFile:@"/var/jb/etc/apt/sources.list.d/default.sources" atomically:NO encoding:NSUTF8StringEncoding error:nil];
             
+            NSString *nathanlrSource = @"Types: deb\n"
+                        @"URIs: https://nathan4s.lol/nathanlr/\n"
+                        @"Suites: ./\n"
+                        @"Components:\n";
+            [nathanlrSource writeToFile:@"/var/jb/etc/apt/sources.list.d/nathanlr.sources" atomically:NO encoding:NSUTF8StringEncoding error:nil];
+            
             spawnRoot(@"/var/jb/usr/bin/dpkg", @[@"-i", [bundlePath stringByAppendingString:@"/sysfiles.deb"]], nil, nil, nil);
             removeFileAtPath(@"/var/jb/Library/dpkg/info/shshd.prerm");
             spawnRoot(@"/var/jb/usr/bin/dpkg", @[@"-r", @"shshd"], NULL, NULL, nil);
