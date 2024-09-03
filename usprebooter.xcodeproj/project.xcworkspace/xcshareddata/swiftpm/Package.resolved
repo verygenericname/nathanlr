@@ -1,5 +1,5 @@
 {
-  "originHash" : "bb354f5ee26f97a80bea96da70628d71c97b25e01e4e845afe4f5b1d0b6cf6e2",
+  "originHash" : "7df1f7568784ea6a1095add2a3d0cb0c73bbbf45d4577ad3a27a3f7512428aee",
   "pins" : [
     {
       "identity" : "swift-cmark",
@@ -17,6 +17,15 @@
       "state" : {
         "revision" : "4aae40bf6fff5286e0e1672329d17824ce16e081",
         "version" : "0.4.0"
+      }
+    },
+    {
+      "identity" : "zstd",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/facebook/zstd",
+      "state" : {
+        "branch" : "dev",
+        "revision" : "20707e3718ee14250fb8a44b3bf023ea36bd88df"
       }
     }
   ],

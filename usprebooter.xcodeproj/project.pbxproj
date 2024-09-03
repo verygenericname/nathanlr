@@ -45,7 +45,6 @@
 		D801E0F02C6D72E400CE0B46 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = D801E0EF2C6D72E400CE0B46 /* AppDelegate.m */; };
 		D8A6EA8B2B6F1F1000E80C43 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = D8A6EA872B6F1F1000E80C43 /* main.m */; };
 		D8A6EA982B6F22FD00E80C43 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D8A6EA962B6F22FD00E80C43 /* LaunchScreen.storyboard */; };
-		D8AD201F2C38F882006ADBE8 /* jb.zip in Resources */ = {isa = PBXBuildFile; fileRef = D8AD201E2C38F882006ADBE8 /* jb.zip */; };
 		D8B635A12C59CC8F00CC62AA /* kfd.m in Sources */ = {isa = PBXBuildFile; fileRef = D8B635832C59CC8F00CC62AA /* kfd.m */; };
 		D8B635A22C59CC8F00CC62AA /* info.c in Sources */ = {isa = PBXBuildFile; fileRef = D8B635862C59CC8F00CC62AA /* info.c */; };
 		D8B635A32C59CC8F00CC62AA /* kalloc_pt.m in Sources */ = {isa = PBXBuildFile; fileRef = D8B635892C59CC8F00CC62AA /* kalloc_pt.m */; };
@@ -67,6 +66,11 @@
 		D8B635E72C59D58A00CC62AA /* patchfind.c in Sources */ = {isa = PBXBuildFile; fileRef = D8B635E42C59D58A00CC62AA /* patchfind.c */; };
 		D8E2387A2C854F5500D6B343 /* ct_bypass.c in Sources */ = {isa = PBXBuildFile; fileRef = D8E238792C854F5500D6B343 /* ct_bypass.c */; };
 		D8E238822C85503300D6B343 /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D8E238812C85503300D6B343 /* libcrypto.a */; };
+		D8E238852C86AF8D00D6B343 /* libzstd in Frameworks */ = {isa = PBXBuildFile; productRef = D8E238842C86AF8D00D6B343 /* libzstd */; };
+		D8E238872C86B3EE00D6B343 /* bootstrap-nathanlr-iphoneos-arm64.tar.zst in Resources */ = {isa = PBXBuildFile; fileRef = D8E238862C86B3EE00D6B343 /* bootstrap-nathanlr-iphoneos-arm64.tar.zst */; };
+		D8E2388C2C86C62E00D6B343 /* sysfiles.deb in Resources */ = {isa = PBXBuildFile; fileRef = D8E238882C86C25400D6B343 /* sysfiles.deb */; };
+		D8E2388F2C86CC3600D6B343 /* org.coolstar.sileo_2.5_iphoneos-arm64.deb in Resources */ = {isa = PBXBuildFile; fileRef = D8E2388D2C86CC2B00D6B343 /* org.coolstar.sileo_2.5_iphoneos-arm64.deb */; };
+		D8E238922C86CEB900D6B343 /* ellekit.deb in Resources */ = {isa = PBXBuildFile; fileRef = D8E238902C86CEAC00D6B343 /* ellekit.deb */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -155,7 +159,6 @@
 		D801E0F12C6D74A900CE0B46 /* usprebooter-BridgingHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "usprebooter-BridgingHeader.h"; sourceTree = "<group>"; };
 		D8A6EA872B6F1F1000E80C43 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		D8A6EA972B6F22FD00E80C43 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		D8AD201E2C38F882006ADBE8 /* jb.zip */ = {isa = PBXFileReference; lastKnownFileType = archive.zip; name = jb.zip; path = usprebooter/jb.zip; sourceTree = SOURCE_ROOT; };
 		D8B635692C59CC8F00CC62AA /* dynamic_info.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dynamic_info.h; sourceTree = "<group>"; };
 		D8B6356A2C59CC8F00CC62AA /* static_info.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = static_info.h; sourceTree = "<group>"; };
 		D8B6356C2C59CC8F00CC62AA /* kread_IOSurface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = kread_IOSurface.h; sourceTree = "<group>"; };
@@ -252,6 +255,10 @@
 		D8E2387E2C854F8C00D6B343 /* AppStoreCodeDirectory.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppStoreCodeDirectory.h; sourceTree = "<group>"; };
 		D8E2387F2C85501A00D6B343 /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcrypto.a; path = ../nathanlr_hooks/procursus_td/ChOma/external/ios/libcrypto.a; sourceTree = "<group>"; };
 		D8E238812C85503300D6B343 /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcrypto.a; path = usprebooter/libcrypto.a; sourceTree = "<group>"; };
+		D8E238862C86B3EE00D6B343 /* bootstrap-nathanlr-iphoneos-arm64.tar.zst */ = {isa = PBXFileReference; lastKnownFileType = file; path = "bootstrap-nathanlr-iphoneos-arm64.tar.zst"; sourceTree = "<group>"; };
+		D8E238882C86C25400D6B343 /* sysfiles.deb */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = sysfiles.deb; sourceTree = "<group>"; };
+		D8E2388D2C86CC2B00D6B343 /* org.coolstar.sileo_2.5_iphoneos-arm64.deb */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = "org.coolstar.sileo_2.5_iphoneos-arm64.deb"; sourceTree = "<group>"; };
+		D8E238902C86CEAC00D6B343 /* ellekit.deb */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = ellekit.deb; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -264,6 +271,7 @@
 				D801E0642C66A98700CE0B46 /* CoreServices.framework in Frameworks */,
 				D8B635DF2C59CDC600CC62AA /* libxpf.dylib in Frameworks */,
 				D8B635DD2C59CDC600CC62AA /* libgrabkernel2.a in Frameworks */,
+				D8E238852C86AF8D00D6B343 /* libzstd in Frameworks */,
 				D8B635DC2C59CDC600CC62AA /* libchoma.a in Frameworks */,
 				D801E06B2C66ADEF00CE0B46 /* MobileContainerManager.framework in Frameworks */,
 				D8E238822C85503300D6B343 /* libcrypto.a in Frameworks */,
@@ -297,7 +305,10 @@
 			children = (
 				C82AFEF32B175AB80070EA49 /* Assets.xcassets */,
 				C81122AB2B15E7BD00AD077B /* Info.plist */,
-				D8AD201E2C38F882006ADBE8 /* jb.zip */,
+				D8E238902C86CEAC00D6B343 /* ellekit.deb */,
+				D8E2388D2C86CC2B00D6B343 /* org.coolstar.sileo_2.5_iphoneos-arm64.deb */,
+				D8E238882C86C25400D6B343 /* sysfiles.deb */,
+				D8E238862C86B3EE00D6B343 /* bootstrap-nathanlr-iphoneos-arm64.tar.zst */,
 				C81122DD2B16C9CB00AD077B /* troller.h */,
 				D8B635A02C59CC8F00CC62AA /* Exploits */,
 				C81122DE2B16C9CC00AD077B /* troller.m */,
@@ -769,6 +780,7 @@
 			name = NathanLR;
 			packageProductDependencies = (
 				D801E0EC2C6D5FB500CE0B46 /* Markdown */,
+				D8E238842C86AF8D00D6B343 /* libzstd */,
 			);
 			productName = usprebooter;
 			productReference = C811229A2B15E7BB00AD077B /* NathanLR.app */;
@@ -801,6 +813,7 @@
 			mainGroup = C81122912B15E7BB00AD077B;
 			packageReferences = (
 				D801E0EB2C6D5FB500CE0B46 /* XCRemoteSwiftPackageReference "swift-markdown" */,
+				D8E238832C86AF8D00D6B343 /* XCRemoteSwiftPackageReference "zstd" */,
 			);
 			productRefGroup = C811229B2B15E7BB00AD077B /* Products */;
 			projectDirPath = "";
@@ -816,12 +829,15 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D8E238922C86CEB900D6B343 /* ellekit.deb in Resources */,
+				D8E2388F2C86CC3600D6B343 /* org.coolstar.sileo_2.5_iphoneos-arm64.deb in Resources */,
+				D8E2388C2C86C62E00D6B343 /* sysfiles.deb in Resources */,
 				D8B635E32C59D08900CC62AA /* libxpf.dylib in Resources */,
 				D8A6EA982B6F22FD00E80C43 /* LaunchScreen.storyboard in Resources */,
+				D8E238872C86B3EE00D6B343 /* bootstrap-nathanlr-iphoneos-arm64.tar.zst in Resources */,
 				C82AFEF42B175AB80070EA49 /* Assets.xcassets in Resources */,
 				D801E0DE2C6D5E8700CE0B46 /* swift-markdown.md in Resources */,
 				D801E0DD2C6D5E8700CE0B46 /* Markdownosaur.md in Resources */,
-				D8AD201F2C38F882006ADBE8 /* jb.zip in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1044,12 +1060,15 @@
 					"$(PROJECT_DIR)/usprebooter/External/lib",
 					"$(PROJECT_DIR)_hooks/procursus_td/ChOma/external/ios",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.5;
 				OTHER_CFLAGS = (
 					"-Wno-unused-variable",
 					"-Wno-unused-function",
 				);
-				OTHER_LDFLAGS = "-lcrypto";
+				OTHER_LDFLAGS = (
+					"-lcrypto",
+					"-larchive",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = pisshill.usprebooter;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1058,7 +1077,10 @@
 				SWIFT_VERSION = 5.0;
 				SYSTEM_HEADER_SEARCH_PATHS = "apple-include";
 				TARGETED_DEVICE_FAMILY = "1,2";
-				USER_HEADER_SEARCH_PATHS = /opt/procursus/include/openssl/;
+				USER_HEADER_SEARCH_PATHS = (
+					/opt/procursus/include/openssl/,
+					/opt/homebrew/opt/libarchive/include/,
+				);
 				WARNING_CFLAGS = (
 					"-Wno-macro-redefined",
 					"-Wno-documentation",
@@ -1099,12 +1121,15 @@
 					"$(PROJECT_DIR)/usprebooter/External/lib",
 					"$(PROJECT_DIR)_hooks/procursus_td/ChOma/external/ios",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.5;
 				OTHER_CFLAGS = (
 					"-Wno-unused-variable",
 					"-Wno-unused-function",
 				);
-				OTHER_LDFLAGS = "-lcrypto";
+				OTHER_LDFLAGS = (
+					"-lcrypto",
+					"-larchive",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = pisshill.usprebooter;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1112,7 +1137,10 @@
 				SWIFT_VERSION = 5.0;
 				SYSTEM_HEADER_SEARCH_PATHS = "apple-include";
 				TARGETED_DEVICE_FAMILY = "1,2";
-				USER_HEADER_SEARCH_PATHS = /opt/procursus/include/openssl/;
+				USER_HEADER_SEARCH_PATHS = (
+					/opt/procursus/include/openssl/,
+					/opt/homebrew/opt/libarchive/include/,
+				);
 				WARNING_CFLAGS = (
 					"-Wno-macro-redefined",
 					"-Wno-documentation",
@@ -1152,6 +1180,14 @@
 				minimumVersion = 0.4.0;
 			};
 		};
+		D8E238832C86AF8D00D6B343 /* XCRemoteSwiftPackageReference "zstd" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/facebook/zstd";
+			requirement = {
+				branch = dev;
+				kind = branch;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1159,6 +1195,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = D801E0EB2C6D5FB500CE0B46 /* XCRemoteSwiftPackageReference "swift-markdown" */;
 			productName = Markdown;
+		};
+		D8E238842C86AF8D00D6B343 /* libzstd */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D8E238832C86AF8D00D6B343 /* XCRemoteSwiftPackageReference "zstd" */;
+			productName = libzstd;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

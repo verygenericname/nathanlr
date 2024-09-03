@@ -98,7 +98,16 @@ int spawnRoot(NSString* path, NSArray* args, NSString** stdOut, NSString** stdEr
     
     pid_t task_pid;
     int status = -200;
-    int spawnError = posix_spawn(&task_pid, [path UTF8String], &action, &attr, (char* const*)argsC, NULL);
+    char *envp[] = {
+        "PATH=/usr/local/sbin:/var/jb/usr/local/sbin:/usr/local/bin:/var/jb/usr/local/bin:/usr/sbin:/var/jb/usr/sbin:/usr/bin:/var/jb/usr/bin:/sbin:/var/jb/sbin:/bin:/var/jb/bin:/usr/bin/X11:/var/jb/usr/bin/X11:/usr/games:/var/jb/usr/games",
+        NULL
+    };
+    int spawnError;
+    if(strcmp([path UTF8String], "/var/jb/usr/bin/dpkg") == 0) {
+        spawnError = posix_spawn(&task_pid, [path UTF8String], &action, &attr, (char* const*)argsC, envp);
+    } else {
+        spawnError = posix_spawn(&task_pid, [path UTF8String], &action, &attr, (char* const*)argsC, NULL);
+    }
     posix_spawnattr_destroy(&attr);
     for (NSUInteger i = 0; i < argCount; i++)
     {
