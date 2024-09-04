@@ -87,8 +87,15 @@
     UIAlertAction *decrypt = [UIAlertAction actionWithTitle:@"Yes" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
         decryptApp(app);
     }];
-
+    
+    UIAlertAction *decrypt2 = [UIAlertAction actionWithTitle:@"Reinject" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+            decryptApp2(app);
+    }];
+    
     [alert addAction:decrypt];
+    if (strcmp([(NSString *)app[@"injected"] UTF8String], " • Injected✅") == 0) {
+        [alert addAction:decrypt2];
+    }
     [alert addAction:cancel];
 
     [self presentViewController:alert animated:YES completion:nil];

@@ -604,8 +604,24 @@ int main(int argc, char *argv[], char *envp[]) {
             NSString *bundlePath = [[NSBundle mainBundle] bundlePath];
             NSFileManager *fileManager = [NSFileManager defaultManager];
             BOOL isExec = [[NSFileManager defaultManager] isExecutableFileAtPath:[appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]];
-            
-            if (isExec) {
+            if (argv[3]) {
+                NSLog(@"Reinjecting");
+                NSString *chomaOutput2;
+                NSString *binaryPath52 = [bundlePath stringByAppendingPathComponent:@"choma"];
+                NSMutableArray* args52 = [NSMutableArray new];
+                [args52 addObject:@"-i"];
+                [args52 addObject:[appBundleAppPath stringByAppendingPathComponent:appName]];
+                [args52 addObject:@"-c"];
+                spawnRoot(binaryPath52, args52, &chomaOutput2, nil, nil);
+                NSString *cleanedOutput2 = [[chomaOutput2 componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] componentsJoinedByString:@""];
+                removeFileAtPath([appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]);
+                copyFile(@"/var/jb/basebins/appstorehelper.dylib", [appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]);
+                apply_coretrust_bypass_wrapper([appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"].UTF8String, [appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"].UTF8String, (char *)cleanedOutput2.UTF8String, NULL);
+                removeExecutePermission([appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]);
+                setUserAndGroup([appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]);
+                killall2(appName, YES, NO);
+                exit(0);
+            } else if (isExec) {
                 NSLog(@"Apparently failed at some point.");
                 removeFileAtPath([appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]);
                 if ([fileManager fileExistsAtPath:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR_BACKUP"]]]) {

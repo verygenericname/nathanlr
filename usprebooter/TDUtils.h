@@ -35,6 +35,7 @@ int proc_listpids(uint32_t type, uint32_t typeinfo, void *buffer, int buffersize
 NSMutableArray *appList(void);
 NSUInteger iconFormat(void);
 void decryptApp(NSDictionary *app);
+void decryptApp2(NSDictionary *app);
 void decryptAppWithPID(pid_t pid);
 void bfinject_rocknroll(NSString *appBundle);
 NSArray *decryptedFileList(void);
