@@ -134,7 +134,7 @@ void decryptApp(NSDictionary *app) {
         
 //        [[UIApplication sharedApplication] launchApplicationWithIdentifier:bundleID suspended:YES];
         NSString *bundleID = app[@"bundleID"];
-        NSString *name = app[@"name"];
+        NSString *injected = app[@"injected"];
         NSString *version = app[@"version"];
         NSString *executable = app[@"executable"];
         NSString *binaryName = [executable lastPathComponent];
@@ -165,13 +165,23 @@ void decryptApp(NSDictionary *app) {
                                 [TSPresentationDelegate presentViewController:doneController animated:YES completion:nil];
                             }];
                         } else {
-                            [TSPresentationDelegate stopActivityWithCompletion:^{
-                                doneController = [UIAlertController alertControllerWithTitle:@"Done toggling Tweaks" message:nil preferredStyle:UIAlertControllerStyleAlert];
-                                UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil];
-                                [doneController addAction:cancel];
-                                [TSPresentationDelegate presentViewController:doneController animated:YES completion:nil];
-                                [[NSNotificationCenter defaultCenter] postNotificationName:@"refreshNotify" object:nil];
-                            }];
+                            if (strcmp([(NSString *)app[@"injected"] UTF8String], " • Injected✅") == 0) {
+                                [TSPresentationDelegate stopActivityWithCompletion:^{
+                                    doneController = [UIAlertController alertControllerWithTitle:@"Done Disabling Tweaks" message:nil preferredStyle:UIAlertControllerStyleAlert];
+                                    UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil];
+                                    [doneController addAction:cancel];
+                                    [TSPresentationDelegate presentViewController:doneController animated:YES completion:nil];
+                                    [[NSNotificationCenter defaultCenter] postNotificationName:@"refreshNotify" object:nil];
+                                }];
+                            } else {
+                                [TSPresentationDelegate stopActivityWithCompletion:^{
+                                    doneController = [UIAlertController alertControllerWithTitle:@"Done Enabling Tweaks" message:nil preferredStyle:UIAlertControllerStyleAlert];
+                                    UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil];
+                                    [doneController addAction:cancel];
+                                    [TSPresentationDelegate presentViewController:doneController animated:YES completion:nil];
+                                    [[NSNotificationCenter defaultCenter] postNotificationName:@"refreshNotify" object:nil];
+                                }];
+                            }
                         }
                     });
                 }
@@ -205,7 +215,6 @@ void decryptApp2(NSDictionary *app) {
         
 //        [[UIApplication sharedApplication] launchApplicationWithIdentifier:bundleID suspended:YES];
         NSString *bundleID = app[@"bundleID"];
-        NSString *name = app[@"name"];
         NSString *version = app[@"version"];
         NSString *executable = app[@"executable"];
         NSString *binaryName = [executable lastPathComponent];

@@ -81,7 +81,11 @@
     
     NSDictionary *app = self.filteredApps[indexPath.row];
 
-    alert = [UIAlertController alertControllerWithTitle:@"Inject" message:[NSString stringWithFormat:@"Toggle Tweaks on %@?", app[@"name"]] preferredStyle:UIAlertControllerStyleAlert];
+    if (strcmp([(NSString *)app[@"injected"] UTF8String], " • Injected✅") == 0) {
+        alert = [UIAlertController alertControllerWithTitle:@"Inject" message:[NSString stringWithFormat:@"Disable Tweaks on %@?", app[@"name"]] preferredStyle:UIAlertControllerStyleAlert];
+    } else {
+        alert = [UIAlertController alertControllerWithTitle:@"Inject" message:[NSString stringWithFormat:@"Enable Tweaks on %@?", app[@"name"]] preferredStyle:UIAlertControllerStyleAlert];
+    }
 
     UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil];
     UIAlertAction *decrypt = [UIAlertAction actionWithTitle:@"Yes" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
@@ -93,7 +97,7 @@
     }];
     
     [alert addAction:decrypt];
-    if (strcmp([(NSString *)app[@"injected"] UTF8String], " • Injected✅") == 0) {
+    if (strcmp([(NSString *)app[@"injected"] UTF8String], " • Injected✅") == 0 && strstr([(NSString *)app[@"bundleID"] UTF8String], "com.apple.") == NULL) {
         [alert addAction:decrypt2];
     }
     [alert addAction:cancel];
