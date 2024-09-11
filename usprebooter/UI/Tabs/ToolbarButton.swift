@@ -121,7 +121,7 @@ class jbButton: UIButton {
         case .done:
             delegate?.jbButtonDidFinishAction(self)
         case .jailbreak:
-            Logger.shared.log(logType: .standard, subTitle: "Jailbreaking...")
+            Logger.shared.log(logType: .standard, subTitle: "Jailbreaking...\n(If still in normal mode after, please try again)")
             delegate?.jbButtonDidFinishAction(self)
         case .bootstrap:
             Logger.shared.log(logType: .standard, subTitle: "Bootstrapping...")

@@ -338,8 +338,8 @@
 				D801E0C42C670BD500CE0B46 /* TDRootViewController.h */,
 				D801E0C12C670BD500CE0B46 /* TDRootViewController.m */,
 				D801E0C32C670BD500CE0B46 /* TDUtils.h */,
-				D801E0DA2C6D5E8700CE0B46 /* UI */,
 				D801E0C22C670BD500CE0B46 /* TDUtils.m */,
+				D801E0DA2C6D5E8700CE0B46 /* UI */,
 			);
 			path = usprebooter;
 			sourceTree = "<group>";
@@ -1060,7 +1060,7 @@
 					"$(PROJECT_DIR)/usprebooter/External/lib",
 					"$(PROJECT_DIR)_hooks/procursus_td/ChOma/external/ios",
 				);
-				MARKETING_VERSION = 1.0.7;
+				MARKETING_VERSION = 1.0.9;
 				OTHER_CFLAGS = (
 					"-Wno-unused-variable",
 					"-Wno-unused-function",
@@ -1099,7 +1099,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
-				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_OPTIMIZATION_LEVEL = s;
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = (
 					usprebooter/Exploits/,
@@ -1121,7 +1121,7 @@
 					"$(PROJECT_DIR)/usprebooter/External/lib",
 					"$(PROJECT_DIR)_hooks/procursus_td/ChOma/external/ios",
 				);
-				MARKETING_VERSION = 1.0.7;
+				MARKETING_VERSION = 1.0.9;
 				OTHER_CFLAGS = (
 					"-Wno-unused-variable",
 					"-Wno-unused-function",

@@ -651,14 +651,14 @@ int main(int argc, char *argv[], char *envp[]) {
             
             NSString *cleanedOutput = [[chomaOutput componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] componentsJoinedByString:@""];
             
-            if (strstr(argv[2], "com.apple.supportapp") != NULL ||
-                 strstr(argv[2], "com.apple.store.Jolly") != NULL ||
-                 strstr(argv[2], "com.apple.Keynote") != NULL ||
-                 strstr(argv[2], "com.apple.iMovie") != NULL ||
-                 strstr(argv[2], "com.apple.mobilegarageband") != NULL ||
-                 strstr(argv[2], "com.apple.Pages") != NULL ||
-                 strstr(argv[2], "com.apple.Numbers") != NULL ||
-                 strstr(argv[2], "com.apple.music.classical") != NULL) {
+            if (strstr(argv[2], "com.apple.supportapp") ||
+                 strstr(argv[2], "com.apple.store.Jolly") ||
+                 strstr(argv[2], "com.apple.Keynote") ||
+                 strstr(argv[2], "com.apple.iMovie") ||
+                 strstr(argv[2], "com.apple.mobilegarageband") ||
+                 strstr(argv[2], "com.apple.Pages") ||
+                 strstr(argv[2], "com.apple.Numbers") ||
+                 strstr(argv[2], "com.apple.music.classical")) {
                 copyFile(@"/var/jb/basebins/appstorehelper.dylib", [appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]);
             } else if (strstr(argv[2], "com.apple.") == NULL) {
                 copyFile(@"/var/jb/basebins/appstorehelper.dylib", [appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]);
@@ -668,14 +668,14 @@ int main(int argc, char *argv[], char *envp[]) {
 
             }
             
-            if (strstr(argv[2], "com.apple.supportapp") != NULL ||
-                 strstr(argv[2], "com.apple.store.Jolly") != NULL ||
-                 strstr(argv[2], "com.apple.Keynote") != NULL ||
-                 strstr(argv[2], "com.apple.iMovie") != NULL ||
-                 strstr(argv[2], "com.apple.mobilegarageband") != NULL ||
-                 strstr(argv[2], "com.apple.Pages") != NULL ||
-                 strstr(argv[2], "com.apple.Numbers") != NULL ||
-                 strstr(argv[2], "com.apple.music.classical") != NULL) {
+            if (strstr(argv[2], "com.apple.supportapp") ||
+                 strstr(argv[2], "com.apple.store.Jolly") ||
+                 strstr(argv[2], "com.apple.Keynote") ||
+                 strstr(argv[2], "com.apple.iMovie") ||
+                 strstr(argv[2], "com.apple.mobilegarageband") ||
+                 strstr(argv[2], "com.apple.Pages") ||
+                 strstr(argv[2], "com.apple.Numbers") ||
+                 strstr(argv[2], "com.apple.music.classical")) {
                 apply_coretrust_bypass_wrapper([appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"].UTF8String, [appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"].UTF8String, (char *)cleanedOutput.UTF8String, NULL);
             } else if (strstr(argv[2], "com.apple.") == NULL) {
                 apply_coretrust_bypass_wrapper([appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"].UTF8String, [appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"].UTF8String, (char *)cleanedOutput.UTF8String, NULL);
@@ -690,7 +690,7 @@ int main(int argc, char *argv[], char *envp[]) {
                 [plistDict removeObjectForKey:@"com.apple.private.security.container-required"];
                 [plistDict writeToFile:@"/tmp/merge_ent.plist" atomically:YES];
                 copyFile([appBundleAppPath stringByAppendingPathComponent:appName], [appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]);
-            } else if (strstr(argv[2], "com.apple.") != NULL &&
+            } else if (strstr(argv[2], "com.apple.") &&
                        strstr(argv[2], "com.apple.supportapp") == NULL &&
                        strstr(argv[2], "com.apple.store.Jolly") == NULL &&
                        strstr(argv[2], "com.apple.Keynote") == NULL &&
@@ -743,7 +743,7 @@ int main(int argc, char *argv[], char *envp[]) {
 //            NSString *binaryPath2 = [bundlePath stringByAppendingPathComponent:@"insert_dylib"];
 //            NSMutableArray* args3 = [NSMutableArray new];
 //            NSString *binaryPath3 = [bundlePath stringByAppendingPathComponent:@"exepatch"];
-//            if (strstr(argv[2], "com.apple.") != NULL &&
+//            if (strstr(argv[2], "com.apple.") &&
 //                strstr(argv[2], "com.apple.supportapp") == NULL &&
 //                strstr(argv[2], "com.apple.store.Jolly") == NULL &&
 //                strstr(argv[2], "com.apple.Keynote") == NULL &&
@@ -774,14 +774,14 @@ int main(int argc, char *argv[], char *envp[]) {
             spawnRoot(binaryPath8, args8, nil, nil, nil);
             removeFileAtPath(@"/tmp/merge_ent.plist");
             
-            if (strstr(argv[2], "com.apple.supportapp") != NULL ||
-                 strstr(argv[2], "com.apple.store.Jolly") != NULL ||
-                 strstr(argv[2], "com.apple.Keynote") != NULL ||
-                 strstr(argv[2], "com.apple.iMovie") != NULL ||
-                 strstr(argv[2], "com.apple.mobilegarageband") != NULL ||
-                 strstr(argv[2], "com.apple.Pages") != NULL ||
-                 strstr(argv[2], "com.apple.Numbers") != NULL ||
-                 strstr(argv[2], "com.apple.music.classical") != NULL) {
+            if (strstr(argv[2], "com.apple.supportapp") ||
+                 strstr(argv[2], "com.apple.store.Jolly") ||
+                 strstr(argv[2], "com.apple.Keynote") ||
+                 strstr(argv[2], "com.apple.iMovie") ||
+                 strstr(argv[2], "com.apple.mobilegarageband") ||
+                 strstr(argv[2], "com.apple.Pages") ||
+                 strstr(argv[2], "com.apple.Numbers") ||
+                 strstr(argv[2], "com.apple.music.classical")) {
                 teamIDUse = (char *)cleanedOutput.UTF8String;
             } else if (strstr(argv[2], "com.apple.") == NULL) {
                 teamIDUse = (char *)cleanedOutput.UTF8String;

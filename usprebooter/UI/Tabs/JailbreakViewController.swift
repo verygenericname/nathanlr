@@ -93,7 +93,11 @@ class JailbreakViewController: UIViewController, UITableViewDelegate, UITableVie
 
         tableView.separatorStyle = .none
         tableView.register(CustomTableViewCell.self, forCellReuseIdentifier: "Cell")
-        Logger.shared.log(logType: .name, subTitle: "Supported Versions: 16.5.1 - 16.6.1")
+        if let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
+            Logger.shared.log(logType: .name, subTitle: "Supported Versions: 16.5.1 - 16.6.1\nApp Version: \(appVersion)")
+        } else {
+            Logger.shared.log(logType: .name, subTitle: "Supported Versions: 16.5.1 - 16.6.1")
+        }
         tableView.reloadData()
     }
     

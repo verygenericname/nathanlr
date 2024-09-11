@@ -28,6 +28,13 @@ class AboutViewController: UIViewController, UITableViewDelegate, UITableViewDat
             NSLayoutConstraint(item: tableView, attribute: .width, relatedBy: .equal, toItem: view, attribute: .width, multiplier: 1, constant: 0),
             NSLayoutConstraint(item: tableView, attribute: .height, relatedBy: .equal, toItem: view, attribute: .height, multiplier: 1, constant: 0),
         ])
+        
+        let closeButton = UIBarButtonItem(title: "Close", style: .plain, target: self, action: #selector(closeButtonTapped))
+        self.navigationItem.rightBarButtonItem = closeButton
+    }
+    
+    @objc private func closeButtonTapped() {
+        dismiss(animated: true, completion: nil)
     }
     
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat { return 40 }

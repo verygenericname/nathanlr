@@ -50,14 +50,16 @@ NSMutableArray *appList(void) {
             @"name":name,
             @"version":version,
             @"executable":executable,
-            @"injected":injected
+            @"injected":injected,
+            @"isInjected": @(injected.length > 0)
         }];
 
         [apps addObject:item];
     }];
 
-    NSSortDescriptor *descriptor = [[NSSortDescriptor alloc] initWithKey:@"name" ascending:YES selector:@selector(localizedCaseInsensitiveCompare:)];
-    [apps sortUsingDescriptors:@[descriptor]];
+    NSSortDescriptor *injectedSortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"isInjected" ascending:NO];
+    NSSortDescriptor *nameSortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"name" ascending:YES selector:@selector(localizedCaseInsensitiveCompare:)];
+    [apps sortUsingDescriptors:@[injectedSortDescriptor, nameSortDescriptor]];
 
     return [apps copy];
 }
@@ -191,16 +193,18 @@ void decryptApp(NSDictionary *app) {
     });
 }
 
-void decryptApp2(NSDictionary *app) {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [TSPresentationDelegate startActivity:@"Injecting..."];
-//        alertWindow = [[UIWindow alloc] initWithFrame: [UIScreen mainScreen].bounds];
-//        alertWindow.rootViewController = [UIViewController new];
-//        alertWindow.windowLevel = UIWindowLevelAlert + 1;
-//        [alertWindow makeKeyAndVisible];
-        
-        // Show a "Decrypting!" alert on the device and block the UI
-    });
+void decryptApp2(NSDictionary *app, BOOL reinjectall) {
+    if(reinjectall == NO) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [TSPresentationDelegate startActivity:@"Reinjecting..."];
+            //        alertWindow = [[UIWindow alloc] initWithFrame: [UIScreen mainScreen].bounds];
+            //        alertWindow.rootViewController = [UIViewController new];
+            //        alertWindow.windowLevel = UIWindowLevelAlert + 1;
+            //        [alertWindow makeKeyAndVisible];
+            
+            // Show a "Decrypting!" alert on the device and block the UI
+        });
+    }
 
 //    NSLog(@"[trolldecrypt] spawning thread to do decryption in background...");
 
@@ -236,13 +240,14 @@ void decryptApp2(NSDictionary *app) {
                 NSString *bundlePath = [[NSBundle mainBundle] bundlePath];
                 NSString *binaryPath = [bundlePath stringByAppendingPathComponent:@"NathanLR"];
                 spawnRoot(binaryPath, args, nil, nil, &status);
-                            [TSPresentationDelegate stopActivityWithCompletion:^{
-                                doneController = [UIAlertController alertControllerWithTitle:@"Done reinjecting Tweaks" message:nil preferredStyle:UIAlertControllerStyleAlert];
-                                UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil];
-                                [doneController addAction:cancel];
-                                [TSPresentationDelegate presentViewController:doneController animated:YES completion:nil];
-                                [[NSNotificationCenter defaultCenter] postNotificationName:@"refreshNotify" object:nil];
-                            }];
+        if(reinjectall == NO) {
+            [TSPresentationDelegate stopActivityWithCompletion:^{
+                doneController = [UIAlertController alertControllerWithTitle:@"Done reinjecting Tweaks" message:nil preferredStyle:UIAlertControllerStyleAlert];
+                UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil];
+                [doneController addAction:cancel];
+                [TSPresentationDelegate presentViewController:doneController animated:YES completion:nil];
+            }];
+        }
                     });
                 }
 //                tries++;

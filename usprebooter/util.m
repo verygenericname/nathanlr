@@ -232,7 +232,7 @@ int get_boot_manifest_hash(char hash[97])
   IOObjectRelease(chosen);
   if (manifestHash == NULL || CFGetTypeID(manifestHash) != CFDataGetTypeID())
   {
-    if (manifestHash != NULL) CFRelease(manifestHash);
+    if (manifestHash) CFRelease(manifestHash);
     return 1;
   }
   length = CFDataGetLength(manifestHash);

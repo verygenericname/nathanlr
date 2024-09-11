@@ -540,7 +540,7 @@ int find_off_cryptid(const char *filePath) {
 
         DEBUG(@"[dumpDecrypted] Comparing %s to %s", imageName, appPath);
 
-        if(strstr(fileNameStr, imageName) != NULL) {
+        if(strstr(fileNameStr, imageName)) {
 			NSLog(@"[dumpDecrypted] Dumping image %d: %s", i, imageName);
 			[self dumpDecryptedImage:imageAddress fileName:imageName image:i task: targetTask];
 		}
@@ -686,33 +686,5 @@ int find_off_cryptid(const char *filePath) {
     close(clientSock);
 	close(serverSock);
 }
-
-
-// Slightly tweaked version of this:
-// https://stackoverflow.com/questions/6807788/how-to-get-ip-address-of-iphone-programmatically
-- (NSDictionary *)getIPAddresses {
-	NSMutableDictionary *addresses = [[NSMutableDictionary alloc] init];
-    struct ifaddrs *interfaces = NULL;
-    struct ifaddrs *temp_addr = NULL;
-    int success = 0;
-    // retrieve the current interfaces - returns 0 on success
-    success = getifaddrs(&interfaces);
-    if (success == 0) {
-        // Loop through linked list of interfaces
-        temp_addr = interfaces;
-        while(temp_addr != NULL) {
-            if(temp_addr->ifa_addr->sa_family == AF_INET) {
-				DEBUG(@"Got IF %s  // ip: %s", temp_addr->ifa_name, inet_ntoa(((struct sockaddr_in *)temp_addr->ifa_addr)->sin_addr));
-                // Check if interface is en0 which is the wifi connection on the iPhone
-				[addresses 	setValue:[NSString stringWithUTF8String:inet_ntoa(((struct sockaddr_in *)temp_addr->ifa_addr)->sin_addr)]
-							forKey:[NSString stringWithUTF8String:temp_addr->ifa_name]];
-            }
-            temp_addr = temp_addr->ifa_next;
-        }
-    }
-    // Free memory
-    freeifaddrs(interfaces);
-    return addresses;
-} 
 
 @end

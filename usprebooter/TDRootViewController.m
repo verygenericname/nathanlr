@@ -11,6 +11,18 @@
     self.filteredApps = self.apps;
     self.title = @"Inject into Apps";
     self.navigationController.navigationBar.prefersLargeTitles = YES;
+    
+    UIBarButtonItem *reinjectAllButton = [[UIBarButtonItem alloc] initWithTitle:@"Reinject all"
+                                                                   style:UIBarButtonItemStylePlain
+                                                                  target:self
+                                                                  action:@selector(reinjectAllButtonTapped)];
+    self.navigationItem.leftBarButtonItem = reinjectAllButton;
+    
+    UIBarButtonItem *closeButton = [[UIBarButtonItem alloc] initWithTitle:@"Close"
+                                                                   style:UIBarButtonItemStylePlain
+                                                                  target:self
+                                                                  action:@selector(closeButtonTapped)];
+    self.navigationItem.rightBarButtonItem = closeButton;
 
     UIRefreshControl *refreshControl = [[UIRefreshControl alloc] init];
     [refreshControl addTarget:self action:@selector(refreshApps:) forControlEvents:UIControlEventValueChanged];
@@ -93,7 +105,7 @@
     }];
     
     UIAlertAction *decrypt2 = [UIAlertAction actionWithTitle:@"Reinject" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
-            decryptApp2(app);
+            decryptApp2(app, NO);
     }];
     
     [alert addAction:decrypt];
@@ -104,6 +116,25 @@
 
     [self presentViewController:alert animated:YES completion:nil];
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
+}
+
+- (void)reinjectAllButtonTapped {
+    [TSPresentationDelegate startActivity:@"Reinjecting..."];
+    for (NSDictionary *app in self.apps) {
+        if (strcmp([(NSString *)app[@"injected"] UTF8String], " • Injected✅") == 0 && strstr([(NSString *)app[@"bundleID"] UTF8String], "com.apple.") == NULL) {
+            decryptApp2(app, YES);
+        }
+        [TSPresentationDelegate stopActivityWithCompletion:^{
+            UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Done reinjecting Tweaks" message:nil preferredStyle:UIAlertControllerStyleAlert];
+            UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil];
+            [alert addAction:cancel];
+            [TSPresentationDelegate presentViewController:alert animated:YES completion:nil];
+        }];
+    }
+}
+
+- (void)closeButtonTapped {
+    [self dismissViewControllerAnimated:YES completion:nil];
 }
 
 - (void)updateSearchResultsForSearchController:(UISearchController *)searchController {
