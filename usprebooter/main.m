@@ -544,6 +544,7 @@ int main(int argc, char *argv[], char *envp[]) {
             NSString *bundlePath = [[NSBundle mainBundle] bundlePath];
             extractBootstrap([bundlePath stringByAppendingString:@"/bootstrap-nathanlr-iphoneos-arm64.tar.zst"]);
             createSymlink([NSString stringWithFormat:@"%s/%@", return_boot_manifest_hash_main(), @"/jb"], @"/var/jb");
+            lchown("/var/jb", 0, 0);
             
             NSString *defaultSources = @"Types: deb\n"
                         @"URIs: https://repo.chariz.com/\n"
@@ -590,6 +591,32 @@ int main(int argc, char *argv[], char *envp[]) {
             removeFileAtPath([NSString stringWithFormat:@"%s/%@", return_boot_manifest_hash_main(), @"/jb"]);
             removeFileAtPath(@"/var/jb");
             sync();
+            exit(0);
+        } else if (argc > 1 && strcmp(argv[1], "--hideJB") == 0) {
+            if (fileExists(@"/var/jb/.procursus_strapped")) {
+                char *boot_hash = return_boot_manifest_hash_main();
+                char jbAppPath[PATH_MAX];
+                snprintf(jbAppPath, sizeof(jbAppPath), "%s/jb/Applications", boot_hash);
+                char uicachePath[PATH_MAX];
+                snprintf(uicachePath, sizeof(uicachePath), "%s/jb/usr/bin/uicache", boot_hash);
+                
+                NSArray *jailbreakApps = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:[NSString stringWithUTF8String:jbAppPath] error:nil];
+                if (jailbreakApps.count) {
+                    for (NSString *jailbreakApp in jailbreakApps) {
+                        NSString *jailbreakAppPath = [[NSString stringWithUTF8String:jbAppPath] stringByAppendingPathComponent:jailbreakApp];
+                        spawnRoot([NSString stringWithUTF8String:uicachePath], @[@"-u", jailbreakAppPath], nil, nil, nil);
+                    }
+                }
+                [[NSFileManager defaultManager] removeItemAtPath:@"/var/jb" error:nil];
+            } else {
+                [[NSFileManager defaultManager] removeItemAtPath:@"/var/jb" error:nil];
+                
+                createSymlink([NSString stringWithFormat:@"%s/%@", return_boot_manifest_hash_main(), @"/jb"], @"/var/jb");
+                lchown("/var/jb", 0, 0);
+                
+                spawnRoot(@"/var/jb/usr/bin/uicache", @[@"-a"], nil, nil, nil);
+            }
+            
             exit(0);
         } else if (argc > 1 && strcmp(argv[1], "--appinject") == 0) {
             signal(SIGSEGV, signal_handler);

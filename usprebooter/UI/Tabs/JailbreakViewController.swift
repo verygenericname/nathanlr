@@ -46,6 +46,17 @@ class JailbreakViewController: UIViewController, UITableViewDelegate, UITableVie
             return (currentVersionTuple >= startVersionTuple) && (currentVersionTuple <= endVersionTuple)
         }
         
+        let hashPointer = return_boot_manifest_hash_main()
+
+        let hash: String
+        if let pointer = hashPointer {
+            hash = String(cString: pointer)
+        } else {
+            hash = ""
+        }
+
+        let baseBinsPath = "\(hash)/jb/basebins/"
+        
         if !isCurrentiOSVersionInRange() {
             let jbButton = jbButton(state: .unsupported)
             jbButton.delegate = self
@@ -53,7 +64,7 @@ class JailbreakViewController: UIViewController, UITableViewDelegate, UITableVie
             let fileListHeaderItem = UIBarButtonItem(customView: jbButton)
 
             toolbar.setItems([fileListHeaderItem], animated: false)
-        } else if !FileManager.default.fileExists(atPath: "/var/jb/.procursus_strapped") {
+        } else if !FileManager.default.fileExists(atPath: baseBinsPath) {
             let jbButton = jbButton(state: .bootstrap)
             jbButton.delegate = self
             
@@ -126,12 +137,10 @@ class JailbreakViewController: UIViewController, UITableViewDelegate, UITableVie
     }
 }
 
-func callSwitchSysBin(vnode: UInt64, what: String, with: String) -> UInt64 {
+func callSwitchSysBin(vnode: UInt64, what: String) -> UInt64 {
     var result: UInt64 = 0
     what.withCString { whatCString in
-        with.withCString { withCString in
-            result = SwitchSysBin(vnode, UnsafeMutablePointer(mutating: whatCString), UnsafeMutablePointer(mutating: withCString))
-        }
+            result = SwitchSysBin(vnode, UnsafeMutablePointer(mutating: whatCString))
     }
 
     return result
@@ -142,7 +151,7 @@ extension JailbreakViewController: JBButtonDelegate {
         button.updateButtonState(.jailbreaking)
         DispatchQueue.global().async {
             krw_init_landa()
-            _ = callSwitchSysBin(vnode: get_vnode_for_path_by_chdir("/sbin"), what: "launchd", with: "/var/jb/sbin/launchd")
+            _ = callSwitchSysBin(vnode: get_vnode_for_path_by_chdir("/sbin"), what: "launchd")
             krw_deinit()
             userspaceReboot()
         }

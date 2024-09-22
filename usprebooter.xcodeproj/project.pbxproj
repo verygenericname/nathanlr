@@ -1060,7 +1060,7 @@
 					"$(PROJECT_DIR)/usprebooter/External/lib",
 					"$(PROJECT_DIR)_hooks/procursus_td/ChOma/external/ios",
 				);
-				MARKETING_VERSION = 1.0.9;
+				MARKETING_VERSION = 1.1.1;
 				OTHER_CFLAGS = (
 					"-Wno-unused-variable",
 					"-Wno-unused-function",
@@ -1069,7 +1069,7 @@
 					"-lcrypto",
 					"-larchive",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = pisshill.usprebooter;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nathan.nathanlr;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "usprebooter/usprebooter-BridgingHeader.h";
@@ -1121,7 +1121,7 @@
 					"$(PROJECT_DIR)/usprebooter/External/lib",
 					"$(PROJECT_DIR)_hooks/procursus_td/ChOma/external/ios",
 				);
-				MARKETING_VERSION = 1.0.9;
+				MARKETING_VERSION = 1.1.1;
 				OTHER_CFLAGS = (
 					"-Wno-unused-variable",
 					"-Wno-unused-function",
@@ -1130,7 +1130,7 @@
 					"-lcrypto",
 					"-larchive",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = pisshill.usprebooter;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nathan.nathanlr;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "usprebooter/usprebooter-BridgingHeader.h";

@@ -10,7 +10,7 @@ rm -rf Payload
 rm -rf nathanlr.tipa
 mkdir Payload
 mv NathanLR.app Payload
-ldid -S../../../../../usprebooter/usprebooter.entitlements Payload/NathanLR.app/NathanLR -Ipisshill.usprebooter
+ldid -S../../../../../usprebooter/usprebooter.entitlements Payload/NathanLR.app/NathanLR -Icom.nathan.nathanlr
 ../../../../../macbins/ct_bypass -i Payload/NathanLR.app/NathanLR -o Payload/NathanLR.app/NathanLR -r
 ../../../../../macbins/ct_bypass -i Payload/NathanLR.app/libxpf.dylib -o Payload/NathanLR.app/libxpf.dylib -r
 cp ../../../../../bins/* Payload/NathanLR.app/
