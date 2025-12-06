@@ -70,15 +70,14 @@
 	<true/>
 	<key>com.apple.private.xpc.persona-manager</key>
 	<true/>
-        <key>com.apple.private.amfi.can-load-trust-cache</key>
-        <true/>
-        <key>com.apple.private.pmap.load-trust-cache</key>
-        <array>
-            <string>global.pdi</string>
-            <string>personalized.pdi</string>
-            <string>personalized.ddi</string>
-        </array>
-    </dict>
+    <key>com.apple.private.amfi.can-load-trust-cache</key>
+    <true/>
+    <key>com.apple.private.pmap.load-trust-cache</key>
+    <array>
+        <string>global.pdi</string>
+        <string>personalized.pdi</string>
+        <string>personalized.ddi</string>
+    </array>
     <key>com.apple.developer.device-information.user-assigned-device-name</key>
     <true/>
 </dict>
