@@ -16,7 +16,12 @@
                                                                    style:UIBarButtonItemStylePlain
                                                                   target:self
                                                                   action:@selector(reinjectAllButtonTapped)];
-    self.navigationItem.leftBarButtonItem = reinjectAllButton;
+    
+    UIBarButtonItem *uninjectAllButton = [[UIBarButtonItem alloc] initWithTitle:@"Uninject all"
+                                                                   style:UIBarButtonItemStylePlain
+                                                                  target:self
+                                                                  action:@selector(uninjectAllButtonTapped)];
+    self.navigationItem.leftBarButtonItems = @[reinjectAllButton, uninjectAllButton];
     
     UIBarButtonItem *closeButton = [[UIBarButtonItem alloc] initWithTitle:@"Close"
                                                                    style:UIBarButtonItemStylePlain
@@ -101,7 +106,7 @@
 
     UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil];
     UIAlertAction *decrypt = [UIAlertAction actionWithTitle:@"Yes" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
-        decryptApp(app);
+        decryptApp(app, NO);
     }];
     
     UIAlertAction *decrypt2 = [UIAlertAction actionWithTitle:@"Reinject" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
@@ -124,13 +129,38 @@
         if (strcmp([(NSString *)app[@"injected"] UTF8String], " • Injected✅") == 0 && strstr([(NSString *)app[@"bundleID"] UTF8String], "com.apple.") == NULL) {
             decryptApp2(app, YES);
         }
+    }
+    [TSPresentationDelegate stopActivityWithCompletion:^{
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Done reinjecting Tweaks" message:nil preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil];
+        [alert addAction:cancel];
+        [TSPresentationDelegate presentViewController:alert animated:YES completion:nil];
+    }];
+}
+
+- (void)uninjectAllButtonTapped {
+    UIAlertController *alert;
+    alert = [UIAlertController alertControllerWithTitle:@"Uninject All" message:[NSString stringWithFormat:@"Uninject all apps?"] preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil];
+    
+    UIAlertAction *yes = [UIAlertAction actionWithTitle:@"Yes" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
+        [TSPresentationDelegate startActivity:@"Uninjecting..."];
+        for (NSDictionary *app in self.apps) {
+            if (strcmp([(NSString *)app[@"injected"] UTF8String], " • Injected✅") == 0) {
+                decryptApp(app, YES);
+            }
+        }
         [TSPresentationDelegate stopActivityWithCompletion:^{
-            UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Done reinjecting Tweaks" message:nil preferredStyle:UIAlertControllerStyleAlert];
+            UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Done uninjecting Tweaks" message:nil preferredStyle:UIAlertControllerStyleAlert];
             UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil];
             [alert addAction:cancel];
             [TSPresentationDelegate presentViewController:alert animated:YES completion:nil];
+            [[NSNotificationCenter defaultCenter] postNotificationName:@"refreshNotify" object:nil];
         }];
-    }
+    }];
+    [alert addAction:yes];
+    [alert addAction:cancel];
+    [self presentViewController:alert animated:YES completion:nil];
 }
 
 - (void)closeButtonTapped {

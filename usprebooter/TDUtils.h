@@ -34,7 +34,7 @@ int proc_pidpath(int pid, void *buffer, uint32_t buffersize);
 int proc_listpids(uint32_t type, uint32_t typeinfo, void *buffer, int buffersize);
 NSMutableArray *appList(void);
 NSUInteger iconFormat(void);
-void decryptApp(NSDictionary *app);
+void decryptApp(NSDictionary *app, BOOL uninjectall);
 void decryptApp2(NSDictionary *app, BOOL reinjectall);
 void decryptAppWithPID(pid_t pid);
 void bfinject_rocknroll(NSString *appBundle);

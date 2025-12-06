@@ -71,7 +71,7 @@ class OptionsViewController: UIViewController, UITableViewDelegate, UITableViewD
     
     var tableView: UITableView!
     var tableData = [
-        ["About/Credits", "Userspace Reboot"]
+        ["About/Credits", "Reboot Userspace"]
     ]
     
     override func viewDidLoad() {
@@ -147,13 +147,31 @@ class OptionsViewController: UIViewController, UITableViewDelegate, UITableViewD
             let APView = TDRootViewController()
             let navController = UINavigationController(rootViewController: APView)
             self.present(navController, animated: true, completion: nil)
-        case "Userspace Reboot":
+        case "Reboot Userspace":
+            let alert = UIAlertController(
+                title: "Reboot Userspace?",
+                message: "Are you sure you want to reboot userspace?",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "No", style: .cancel, handler: nil))
+            alert.addAction(UIAlertAction(title: "Yes", style: .destructive, handler: { _ in
                 let ret = reboot3(0x2000000000000000)
                 if ret != 0 {
                     userspaceReboot()
                 }
+            }))
+            present(alert, animated: true)
         case "Reboot":
-            reboot3(0x8000000000000000)
+            let alert = UIAlertController(
+                title: "Reboot?",
+                message: "Are you sure you want to reboot?",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "No", style: .cancel, handler: nil))
+            alert.addAction(UIAlertAction(title: "Yes", style: .destructive, handler: { _ in
+                reboot3(0x8000000000000000)
+            }))
+            present(alert, animated: true)
         case "UICache":
             let binaryPath = "/var/jb/usr/bin/uicache"
             let args = ["-a"]

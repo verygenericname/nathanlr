@@ -32,7 +32,8 @@ class JailbreakViewController: UIViewController, UITableViewDelegate, UITableVie
         
         func isCurrentiOSVersionInRange() -> Bool {
             let startVersion = "16.5.1"
-            let endVersion = "16.6.1"
+            // let endVersion = "16.6.1"
+            let endVersion = "17.0"
             let systemVersion = UIDevice.current.systemVersion
             func versionTuple(from versionString: String) -> (Int, Int, Int) {
                 let components = versionString.split(separator: ".").compactMap { Int($0) }
@@ -55,7 +56,7 @@ class JailbreakViewController: UIViewController, UITableViewDelegate, UITableVie
             hash = ""
         }
 
-        let baseBinsPath = "\(hash)/jb/basebins/"
+        let baseBinsPath = "\(hash)/jb/.installed_nathanlr"
         
         if !isCurrentiOSVersionInRange() {
             let jbButton = jbButton(state: .unsupported)
@@ -105,9 +106,9 @@ class JailbreakViewController: UIViewController, UITableViewDelegate, UITableVie
         tableView.separatorStyle = .none
         tableView.register(CustomTableViewCell.self, forCellReuseIdentifier: "Cell")
         if let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
-            Logger.shared.log(logType: .name, subTitle: "Supported Versions: 16.5.1 - 16.6.1\nApp Version: \(appVersion)")
+            Logger.shared.log(logType: .name, subTitle: "Supported Versions: 16.5.1 - 16.7 RC, 17.0\nApp Version: \(appVersion)")
         } else {
-            Logger.shared.log(logType: .name, subTitle: "Supported Versions: 16.5.1 - 16.6.1")
+            Logger.shared.log(logType: .name, subTitle: "Supported Versions: 16.5.1 - 16.7 RC, 17.0")
         }
         tableView.reloadData()
     }
@@ -137,23 +138,15 @@ class JailbreakViewController: UIViewController, UITableViewDelegate, UITableVie
     }
 }
 
-func callSwitchSysBin(vnode: UInt64, what: String) -> UInt64 {
-    var result: UInt64 = 0
-    what.withCString { whatCString in
-            result = SwitchSysBin(vnode, UnsafeMutablePointer(mutating: whatCString))
-    }
-
-    return result
-}
-
 extension JailbreakViewController: JBButtonDelegate {
     func jbButtonDidFinishAction(_ button: jbButton) {
         button.updateButtonState(.jailbreaking)
         DispatchQueue.global().async {
-            krw_init_landa()
-            _ = callSwitchSysBin(vnode: get_vnode_for_path_by_chdir("/sbin"), what: "launchd")
-            krw_deinit()
-            userspaceReboot()
+                runPacBrute {
+                    ensure_755("/var/jb/var/mobile/Library/Preferences")
+                    showNonDefaultSystemApps()
+                    userspaceReboot()
+                }
         }
     }
     

@@ -145,24 +145,24 @@ class CreditsData {
                               role: "2nd serotonin dev, jitterd",
                               pfpURL: URL(string: "https://github.com/hrtowii.png")!,
                               socialLink: URL(string: "https://twitter.com/htrowii")!)
+        let l = CreditsPerson(name: "DuyKhanhTran",
+                              role: "Made 17.0 possible with launchd tfp, Contributed SpringBoard hooks and launchd hooks, LiveContainer Hooks, Trollstore JB Env",
+                              pfpURL: URL(string: "https://github.com/khanhduytran0.png")!,
+                              socialLink: URL(string: "https://twitter.com/khanhduytran0")!)
         let O = CreditsPerson(name: "Samara",
                               role: "UI",
                               pfpURL: URL(string: "https://github.com/ssalggnikool.png")!,
                               socialLink: URL(string: "https://twitter.com/ssaIggnikool")!)
-        let l = CreditsPerson(name: "DuyTranKhanh",
-                              role: "Contributed SpringBoard hooks and launchd hooks, LiveContainer Hooks, Trollstore JB Env",
-                              pfpURL: URL(string: "https://github.com/khanhduytran0.png")!,
-                              socialLink: URL(string: "https://twitter.com/TranKha50277352")!)
         let L = CreditsPerson(name: "NSBedtime",
                               role: "launchd hax, helped out a ton!",
                               pfpURL: URL(string: "https://pbs.twimg.com/profile_images/1743473385235947520/exyLyEA5_400x400.jpg")!,
-                              socialLink: URL(string: "https://twitter.com/NSBedtime")!)
+                              socialLink: nil)
         let e = CreditsPerson(name: "Nick Chan",
                               role: "Helped out a lot!",
                               pfpURL: URL(string: "https://github.com/asdfugil.png")!,
                               socialLink: URL(string: "https://twitter.com/riscv64")!)
         let R = CreditsPerson(name: "Alfie CG",
-                              role: "insert_dylib, name, helped out a lot, kernel exploit from TrollInstallerX",
+                              role: "Lots of help, old exploit",
                               pfpURL: URL(string: "https://github.com/alfiecg24.png")!,
                               socialLink: URL(string: "https://twitter.com/alfiecg_dev")!)
         let s = CreditsPerson(name: "haxi0",
@@ -170,18 +170,18 @@ class CreditsData {
                               pfpURL: URL(string: "https://github.com/haxi0.png")!,
                               socialLink: URL(string: "https://haxi0.space/")!)
         let t = CreditsPerson(name: "tuancc",
-                              role: "Roothide dpkg hook, advice",
+                              role: "Roothide dpkg hook, forkfix, and advice",
                               pfpURL: URL(string: "https://github.com/roothider.png")!,
                               socialLink: URL(string: "https://twitter.com/roothideDev")!)
         let o = CreditsPerson(name: "opa334",
-                              role: "Several hooks from Dopamine",
+                              role: "Several hooks from Dopamine, launchd server from Dopamine",
                               pfpURL: URL(string: "https://github.com/opa334.png")!,
                               socialLink: URL(string: "https://twitter.com/opa334dev")!)
         let d = CreditsPerson(name: "timbovill",
                               role: "Icon",
-                              pfpURL: URL(string: "https://cdn.discordapp.com/avatars/858923165379199007/d556be3fb98bc7fc37f79c8cceb63b1e?size=1024")!,
+                              pfpURL: URL(string: "https://avatar-cyan.vercel.app/api/pfp/858923165379199007/image?size=1024&format=jpeg")!,
                               socialLink: nil)
         
-        return [N, T, r, O, d, l, L, e, R, s, t, o]
+        return [N, T, r, l, O, d, L, e, R, s, t, o]
     }
 }

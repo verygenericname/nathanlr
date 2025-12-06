@@ -24,12 +24,84 @@
 #import <sys/sysctl.h>
 #import <Foundation/Foundation.h>
 #include <dlfcn.h>
-#include <sys/proc_info.h>
-#include <libproc.h>
+#import <IOKit/IOKitLib.h>
+//#include <sys/proc_info.h>
+// #include <libproc.h>
 #include "archive.h"
 #include "archive_entry.h"
 #import "zstd.h"
-#include "patchfinder/patchfind.h"
+#include "Exploits/TaskPortHaxxApp/TaskPortHaxxApp/Header.h"
+#include "Exploits/TaskPortHaxxApp/TaskPortHaxxApp/unarchive.h"
+#include "choma/CSBlob.h"
+#include "choma/FileStream.h"
+#include "choma/CodeDirectory.h"
+
+#define kCFPreferencesNoContainer CFSTR("kCFPreferencesNoContainer")
+void _CFPreferencesSetValueWithContainer(CFStringRef key, CFPropertyListRef value, CFStringRef applicationID, CFStringRef userName, CFStringRef hostName, CFStringRef containerPath);
+Boolean _CFPreferencesSynchronizeWithContainer(CFStringRef applicationID, CFStringRef userName, CFStringRef hostName, CFStringRef containerPath);
+CFArrayRef _CFPreferencesCopyKeyListWithContainer(CFStringRef applicationID, CFStringRef userName, CFStringRef hostName, CFStringRef containerPath);
+CFDictionaryRef _CFPreferencesCopyMultipleWithContainer(CFArrayRef keysToFetch, CFStringRef applicationID, CFStringRef userName, CFStringRef hostName, CFStringRef containerPath);
+
+bool macho_is_encrypted(MachO *macho);
+MachO *macho_init_for_reading(const char *filePath);
+void initLoad(void);
+
+NSError *showNonDefaultSystemApps(void)
+{
+    _CFPreferencesSetValueWithContainer(CFSTR("SBShowNonDefaultSystemApps"), kCFBooleanTrue, CFSTR("com.apple.springboard"), CFSTR("mobile"), kCFPreferencesAnyHost, kCFPreferencesNoContainer);
+    _CFPreferencesSynchronizeWithContainer(CFSTR("com.apple.springboard"), CFSTR("mobile"), kCFPreferencesAnyHost, kCFPreferencesNoContainer);
+    return nil;
+}
+
+int ensure_755(const char *path) {
+    struct stat s;
+
+    if (stat(path, &s) != 0) {
+        perror("stat");
+        return -1;
+    }
+
+    mode_t perms = s.st_mode & 0777;
+
+    if (perms != 0755) {
+        if (chmod(path, 0755) != 0) {
+            perror("chmod");
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+char *get_team_id(char *path) {
+    int count = 0;
+    uint32_t offset = 0;
+    char *teamid = NULL;
+
+    MachO *macho = macho_init_for_reading(path);
+
+    CS_SuperBlob *superblob = macho_read_code_signature(macho);
+    CS_DecodedSuperBlob *decodedSuperBlob = csd_superblob_decode(superblob);
+    CS_DecodedBlob *currentBlob = decodedSuperBlob->firstBlob;
+    
+    while (currentBlob) {
+        uint32_t blobType = currentBlob->type;
+        
+        if (blobType == CSSLOT_CODEDIRECTORY || blobType == CSSLOT_ALTERNATE_CODEDIRECTORIES) {
+            CS_CodeDirectory codeDir;
+            csd_blob_read(currentBlob, 0, sizeof(codeDir), &codeDir);
+            CODE_DIRECTORY_APPLY_BYTE_ORDER(&codeDir, BIG_TO_HOST_APPLIER);
+            teamid = csd_code_directory_copy_team_id(currentBlob, NULL);
+        }
+
+        currentBlob = currentBlob->next;
+    }
+    
+    
+
+    free(superblob);
+    return teamid;
+}
 
 #define BUFFER_SIZE 8192
 NSString *const bootstrapErrorDomain = @"BootstrapErrorDomain";
@@ -48,8 +120,111 @@ typedef NS_ENUM(NSInteger, JBErrorCode) {
 - (BOOL)launchApplicationWithIdentifier:(id)arg1 suspended:(BOOL)arg2;
 @end
 
-int apply_coretrust_bypass_wrapper(const char *inputPath, const char *outputPath, char *teamID, char *appStoreBinary);
-int ptrace(int, int, int, int);
+int child_execve(char *exceptionPortName, char *path) {
+    mach_port_t exception_port = MACH_PORT_NULL;
+    mach_port_t fake_bootstrap_port = MACH_PORT_NULL;
+    bootstrap_look_up(bootstrap_port, exceptionPortName, &exception_port);
+    assert(exception_port != MACH_PORT_NULL);
+    bootstrap_look_up(bootstrap_port, "com.kdt.taskporthaxx.fake_bootstrap_port", &fake_bootstrap_port);
+    assert(fake_bootstrap_port != MACH_PORT_NULL);
+    
+    task_set_exception_ports(mach_task_self(),
+        EXC_MASK_ALL | EXC_MASK_CRASH,
+        exception_port,
+        EXCEPTION_STATE_IDENTITY | MACH_EXCEPTION_CODES,
+        ARM_THREAD_STATE64);
+    mach_port_t bootstrapPort = bootstrap_port;
+    task_set_bootstrap_port(mach_task_self(), fake_bootstrap_port);
+    
+    posix_spawnattr_t attr;
+    if(posix_spawnattr_init(&attr) != 0) {
+        perror("posix_spawnattr_init");
+        return 1;
+    }
+    
+    if(posix_spawnattr_setflags(&attr, POSIX_SPAWN_SETEXEC) != 0) {
+        perror("posix_spawnattr_set_flags");
+        return 1;
+    }
+    
+    posix_spawnattr_set_registered_ports_np(&attr, (mach_port_t[]){0, bootstrapPort, fake_bootstrap_port}, 3);
+    posix_spawnattr_setexceptionports_np(&attr,
+        EXC_MASK_ALL | EXC_MASK_CRASH,
+        exception_port, EXCEPTION_STATE_IDENTITY | MACH_EXCEPTION_CODES, ARM_THREAD_STATE64);
+    char *argv2[] = { path, NULL };
+    posix_spawn(NULL, argv2[0], NULL, &attr, argv2, environ);
+    perror("posix_spawn");
+    return 1;
+}
+
+int load_trust_cache(NSString *tcPath) {
+    NSData *tcData = [NSData dataWithContentsOfFile:tcPath];
+    if (!tcData) {
+        printf("Trust cache file not found: %s\n", tcPath.fileSystemRepresentation);
+        return 1;
+    }
+    CFDictionaryRef match = IOServiceMatching("AppleMobileFileIntegrity");
+    io_service_t svc = IOServiceGetMatchingService(0, match);
+    io_connect_t conn;
+    IOServiceOpen(svc, mach_task_self_, 0, &conn);
+    kern_return_t kr = IOConnectCallMethod(conn, 2, NULL, 0, tcData.bytes, tcData.length, NULL, NULL, NULL, NULL);
+    if (kr != KERN_SUCCESS) {
+        printf("IOConnectCallMethod failed: %s\n", mach_error_string(kr));
+        return 1;
+    }
+    printf("Loaded trust cache from %s\n", tcPath.fileSystemRepresentation);
+    IOServiceClose(conn);
+    IOObjectRelease(svc);
+    return 0;
+}
+
+int child_stage1_prepare(void) {
+    NSFileManager *fm = NSFileManager.defaultManager;
+    NSString *outDir = [fm URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask].lastObject.path;
+    NSString *zipPath = [outDir stringByAppendingPathComponent:@"UpdateBrainService.zip"];
+    NSString *assetDir = [outDir stringByAppendingPathComponent:@"AssetData"];
+    
+    if ([fm fileExistsAtPath:zipPath] || ![fm fileExistsAtPath:assetDir]) {
+        printf("Downloading UpdateBrainService\n");
+        NSURL *url = [NSURL URLWithString:@"https://updates.cdn-apple.com/2022FallFCS/patches/012-73541/F0A2BDFD-317B-4557-BD18-269079BDB196/com_apple_MobileAsset_MobileSoftwareUpdate_UpdateBrain/f9886a753f7d0b2fc3378a28ab6975769f6b1c26.zip"];
+        NSData *urlData = [NSData dataWithContentsOfURL:url];
+        if (!urlData) {
+            printf("Failed to download UpdateBrainService\n");
+            return 1;
+        }
+        
+        // Save and extract UpdateBrainService
+        [urlData writeToFile:zipPath atomically:YES];
+        printf("Downloaded UpdateBrainService to %s\n", zipPath.fileSystemRepresentation);
+        printf("Extracting UpdateBrainService\n");
+        extract(zipPath, outDir, NULL);
+        [NSFileManager.defaultManager removeItemAtPath:zipPath error:nil];
+    }
+    
+    // Copy xpc service
+    NSString *execDir = @"/var/db/com.apple.xpc.roleaccountd.staging/exec";
+    [fm createDirectoryAtPath:execDir withIntermediateDirectories:YES attributes:nil error:nil];
+    NSString *xpcName = @"com.apple.MobileSoftwareUpdate.UpdateBrainService.xpc";
+    NSString *outXPCPath = [execDir stringByAppendingPathComponent:xpcName];
+    if (![fm fileExistsAtPath:outXPCPath]) {
+        NSError *error = nil;
+        [fm copyItemAtPath:[assetDir stringByAppendingPathComponent:xpcName] toPath:outXPCPath error:&error];
+        if (error) {
+            NSLog(@"Failed to copy UpdateBrainService.xpc: %@", error);
+            return 1;
+        }
+    }
+    
+    printf("Stage 1 setup complete\n");
+    return 0;
+}
+
+kern_return_t _launch_job_routine(int selector, xpc_object_t request, id *result);
+xpc_object_t _CFXPCCreateXPCObjectFromCFObject(id object);
+
+int apply_coretrust_bypass_wrapper(const char *inputPath, const char *outputPath, char *teamID, char *identifier, char *appStoreBinary);
+int proc_pidpath(int pid, void * buffer, uint32_t  buffersize);
+#define PROC_PIDPATHINFO_MAXSIZE        (4*MAXPATHLEN)
 NSString *executablePathForPID(pid_t pid) {
     char pathBuffer[PROC_PIDPATHINFO_MAXSIZE];
     int result = proc_pidpath(pid, pathBuffer, sizeof(pathBuffer));
@@ -99,7 +274,69 @@ copy_data(struct archive *ar, struct archive *aw)
 }
 
 
-int libarchive_unarchive(const char *fileToExtract, const char *extractionPath);
+int libarchive_unarchive(const char *fileToExtract, const char *extractionPath)
+{
+    struct archive *a;
+    struct archive *ext;
+    struct archive_entry *entry;
+    int flags;
+    int r;
+
+    /* Select which attributes we want to restore. */
+    flags = ARCHIVE_EXTRACT_TIME;
+    flags |= ARCHIVE_EXTRACT_PERM;
+    flags |= ARCHIVE_EXTRACT_ACL;
+    flags |= ARCHIVE_EXTRACT_FFLAGS;
+    flags |= ARCHIVE_EXTRACT_OWNER;
+
+    a = archive_read_new();
+    archive_read_support_format_all(a);
+    archive_read_support_filter_all(a);
+    ext = archive_write_disk_new();
+    archive_write_disk_set_options(ext, flags);
+    archive_write_disk_set_standard_lookup(ext);
+    if ((r = archive_read_open_filename(a, fileToExtract, 10240)))
+            return 1;
+    for (;;) {
+            r = archive_read_next_header(a, &entry);
+            if (r == ARCHIVE_EOF)
+                    break;
+            if (r < ARCHIVE_OK)
+                    fprintf(stderr, "%s\n", archive_error_string(a));
+            if (r < ARCHIVE_WARN)
+                    return 1;
+
+            const char *currentFile = archive_entry_pathname(entry);
+            char outputPath[PATH_MAX];
+            strlcpy(outputPath, extractionPath, PATH_MAX);
+            strlcat(outputPath, "/", PATH_MAX);
+            strlcat(outputPath, currentFile, PATH_MAX);
+
+            archive_entry_set_pathname(entry, outputPath);
+            
+            r = archive_write_header(ext, entry);
+            if (r < ARCHIVE_OK)
+                    fprintf(stderr, "%s\n", archive_error_string(ext));
+            else if (archive_entry_size(entry) > 0) {
+                    r = copy_data(a, ext);
+                    if (r < ARCHIVE_OK)
+                            fprintf(stderr, "%s\n", archive_error_string(ext));
+                    if (r < ARCHIVE_WARN)
+                            return 1;
+            }
+            r = archive_write_finish_entry(ext);
+            if (r < ARCHIVE_OK)
+                    fprintf(stderr, "%s\n", archive_error_string(ext));
+            if (r < ARCHIVE_WARN)
+                    return 1;
+    }
+    archive_read_close(a);
+    archive_read_free(a);
+    archive_write_close(ext);
+    archive_write_free(ext);
+    
+    return 0;
+}
 
 NSError* decompressZstd(NSString *zstdPath, NSString *tarPath)
 {
@@ -547,38 +784,38 @@ int main(int argc, char *argv[], char *envp[]) {
             lchown("/var/jb", 0, 0);
             
             NSString *defaultSources = @"Types: deb\n"
-                        @"URIs: https://repo.chariz.com/\n"
-                        @"Suites: ./\n"
-                        @"Components:\n"
-                        @"\n"
-                        @"Types: deb\n"
-                        @"URIs: https://havoc.app/\n"
-                        @"Suites: ./\n"
-                        @"Components:\n"
-                        @"\n"
-                        @"Types: deb\n"
-                        @"URIs: http://apt.thebigboss.org/repofiles/cydia/\n"
-                        @"Suites: stable\n"
-                        @"Components: main\n"
-                        @"\n"
-                        @"Types: deb\n"
-                        @"URIs: https://ellekit.space/\n"
-                        @"Suites: ./\n"
-                        @"Components:\n";
+            @"URIs: https://repo.chariz.com/\n"
+            @"Suites: ./\n"
+            @"Components:\n"
+            @"\n"
+            @"Types: deb\n"
+            @"URIs: https://havoc.app/\n"
+            @"Suites: ./\n"
+            @"Components:\n"
+            @"\n"
+            @"Types: deb\n"
+            @"URIs: http://apt.thebigboss.org/repofiles/cydia/\n"
+            @"Suites: stable\n"
+            @"Components: main\n"
+            @"\n"
+            @"Types: deb\n"
+            @"URIs: https://ellekit.space/\n"
+            @"Suites: ./\n"
+            @"Components:\n";
             [defaultSources writeToFile:@"/var/jb/etc/apt/sources.list.d/default.sources" atomically:NO encoding:NSUTF8StringEncoding error:nil];
             
             NSString *nathanlrSource = @"Types: deb\n"
-                        @"URIs: https://nathan4s.lol/nathanlr/\n"
-                        @"Suites: ./\n"
-                        @"Components:\n";
+            @"URIs: https://nathan4s.lol/nathanlr/\n"
+            @"Suites: ./\n"
+            @"Components:\n";
             [nathanlrSource writeToFile:@"/var/jb/etc/apt/sources.list.d/nathanlr.sources" atomically:NO encoding:NSUTF8StringEncoding error:nil];
             
             spawnRoot(@"/var/jb/usr/bin/dpkg", @[@"-i", [bundlePath stringByAppendingString:@"/sysfiles.deb"]], nil, nil, nil);
             removeFileAtPath(@"/var/jb/Library/dpkg/info/shshd.prerm");
             spawnRoot(@"/var/jb/usr/bin/dpkg", @[@"-r", @"shshd"], NULL, NULL, nil);
             spawnRoot(@"/var/jb/usr/bin/dpkg", @[@"-r", @"libkrw0", @"libdimentio0"], NULL, NULL, nil);
-            spawnRoot(@"/var/jb/usr/bin/dpkg", @[@"-i", [bundlePath stringByAppendingString:@"/ellekit.deb"]], nil, nil, nil);
-            spawnRoot(@"/var/jb/usr/bin/dpkg", @[@"-i", [bundlePath stringByAppendingString:@"/org.coolstar.sileo_2.5_iphoneos-arm64.deb"]], nil, nil, nil);
+            //            spawnRoot(@"/var/jb/usr/bin/dpkg", @[@"-i", [bundlePath stringByAppendingString:@"/ellekit.deb"]], nil, nil, nil);
+            spawnRoot(@"/var/jb/usr/bin/dpkg", @[@"-i", [bundlePath stringByAppendingString:@"/org.coolstar.sileo_2.5.1_iphoneos-arm64.deb"]], nil, nil, nil);
             spawnRoot(@"/var/jb/bin/sh", @[@"/var/jb/prep_bootstrap.sh"], nil, nil, nil);
             
             [@"" writeToFile:@"/var/jb/.installed_dopamine" atomically:NO encoding:NSUTF8StringEncoding error:nil];
@@ -633,17 +870,10 @@ int main(int argc, char *argv[], char *envp[]) {
             BOOL isExec = [[NSFileManager defaultManager] isExecutableFileAtPath:[appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]];
             if (argv[3]) {
                 NSLog(@"Reinjecting");
-                NSString *chomaOutput2;
-                NSString *binaryPath52 = [bundlePath stringByAppendingPathComponent:@"choma"];
-                NSMutableArray* args52 = [NSMutableArray new];
-                [args52 addObject:@"-i"];
-                [args52 addObject:[appBundleAppPath stringByAppendingPathComponent:appName]];
-                [args52 addObject:@"-c"];
-                spawnRoot(binaryPath52, args52, &chomaOutput2, nil, nil);
-                NSString *cleanedOutput2 = [[chomaOutput2 componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] componentsJoinedByString:@""];
+                char *cleanedOutput2 = get_team_id((char *)[appBundleAppPath stringByAppendingPathComponent:appName].UTF8String);
                 removeFileAtPath([appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]);
                 copyFile(@"/var/jb/basebins/appstorehelper.dylib", [appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]);
-                apply_coretrust_bypass_wrapper([appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"].UTF8String, [appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"].UTF8String, (char *)cleanedOutput2.UTF8String, NULL);
+                apply_coretrust_bypass_wrapper([appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"].UTF8String, [appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"].UTF8String, cleanedOutput2, argv[2], NULL);
                 removeExecutePermission([appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]);
                 setUserAndGroup([appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]);
                 killall2(appName, YES, NO);
@@ -668,153 +898,53 @@ int main(int argc, char *argv[], char *envp[]) {
                 exit(0);
             }
             
-            NSString *chomaOutput;
-            NSString *binaryPath5 = [bundlePath stringByAppendingPathComponent:@"choma"];
-            NSMutableArray* args5 = [NSMutableArray new];
-            [args5 addObject:@"-i"];
-            [args5 addObject:[appBundleAppPath stringByAppendingPathComponent:appName]];
-            [args5 addObject:@"-c"];
-            spawnRoot(binaryPath5, args5, &chomaOutput, nil, nil);
+            char *cleanedOutput = get_team_id((char *)[appBundleAppPath stringByAppendingPathComponent:appName].UTF8String);
             
-            NSString *cleanedOutput = [[chomaOutput componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] componentsJoinedByString:@""];
-            
-            if (strstr(argv[2], "com.apple.supportapp") ||
-                 strstr(argv[2], "com.apple.store.Jolly") ||
-                 strstr(argv[2], "com.apple.Keynote") ||
-                 strstr(argv[2], "com.apple.iMovie") ||
-                 strstr(argv[2], "com.apple.mobilegarageband") ||
-                 strstr(argv[2], "com.apple.Pages") ||
-                 strstr(argv[2], "com.apple.Numbers") ||
-                 strstr(argv[2], "com.apple.music.classical")) {
-                copyFile(@"/var/jb/basebins/appstorehelper.dylib", [appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]);
-            } else if (strstr(argv[2], "com.apple.") == NULL) {
+            removeFileAtPath([appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]);
+            removeFileAtPath([appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]);
+            if (cleanedOutput && strlen(cleanedOutput) > 0) {
                 copyFile(@"/var/jb/basebins/appstorehelper.dylib", [appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]);
             } else {
-//                [@"" writeToFile:[appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"] atomically:NO encoding:NSUTF8StringEncoding error:nil];
+                cleanedOutput = NULL;
                 copyFile(@"/var/jb/basebins/appstorehelper_system.dylib", [appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]);
-
             }
             
-            if (strstr(argv[2], "com.apple.supportapp") ||
-                 strstr(argv[2], "com.apple.store.Jolly") ||
-                 strstr(argv[2], "com.apple.Keynote") ||
-                 strstr(argv[2], "com.apple.iMovie") ||
-                 strstr(argv[2], "com.apple.mobilegarageband") ||
-                 strstr(argv[2], "com.apple.Pages") ||
-                 strstr(argv[2], "com.apple.Numbers") ||
-                 strstr(argv[2], "com.apple.music.classical")) {
-                apply_coretrust_bypass_wrapper([appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"].UTF8String, [appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"].UTF8String, (char *)cleanedOutput.UTF8String, NULL);
-            } else if (strstr(argv[2], "com.apple.") == NULL) {
-                apply_coretrust_bypass_wrapper([appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"].UTF8String, [appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"].UTF8String, (char *)cleanedOutput.UTF8String, NULL);
-            }
+            apply_coretrust_bypass_wrapper([appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"].UTF8String, [appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"].UTF8String, cleanedOutput, argv[2], NULL);
             
             //            copyFile([appBundleAppPath stringByAppendingPathComponent:appName], [appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR_BACKUP"]]);
             
-            if (fileExists([appBundlePath stringByAppendingPathComponent:@"_TrollStore"])) {
-                removeFileAtPath(@"/tmp/merge_ent.plist");
-                copyFile([bundlePath stringByAppendingPathComponent:@"merge_ent.plist"], @"/tmp/merge_ent.plist");
-                NSMutableDictionary *plistDict = [NSMutableDictionary dictionaryWithContentsOfFile:@"/tmp/merge_ent.plist"];
-                [plistDict removeObjectForKey:@"com.apple.private.security.container-required"];
-                [plistDict writeToFile:@"/tmp/merge_ent.plist" atomically:YES];
-                copyFile([appBundleAppPath stringByAppendingPathComponent:appName], [appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]);
-            } else if (strstr(argv[2], "com.apple.") &&
-                       strstr(argv[2], "com.apple.supportapp") == NULL &&
-                       strstr(argv[2], "com.apple.store.Jolly") == NULL &&
-                       strstr(argv[2], "com.apple.Keynote") == NULL &&
-                       strstr(argv[2], "com.apple.iMovie") == NULL &&
-                       strstr(argv[2], "com.apple.mobilegarageband") == NULL &&
-                       strstr(argv[2], "com.apple.Pages") == NULL &&
-                       strstr(argv[2], "com.apple.Numbers") == NULL &&
-                       strstr(argv[2], "com.apple.music.classical") == NULL) {
-                removeFileAtPath(@"/tmp/merge_ent.plist");
-                copyFile([bundlePath stringByAppendingPathComponent:@"merge_ent.plist"], @"/tmp/merge_ent.plist");
-                NSMutableDictionary *plistDict = [NSMutableDictionary dictionaryWithContentsOfFile:@"/tmp/merge_ent.plist"];
-                [plistDict setObject:argv2 forKey:@"com.apple.private.security.container-required"];
-                [plistDict writeToFile:@"/tmp/merge_ent.plist" atomically:YES];
-                copyFile([appBundleAppPath stringByAppendingPathComponent:appName], [appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]);
-                replaceSubtype([appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]);
-            } else {
-                pid_t pid = -1;
-                NSArray *processes = sysctl_ps();
-                for (NSDictionary *process in processes) {
-                    NSString *proc_name = process[@"proc_name"];
-                    if ([proc_name isEqualToString:appName]) {
-                        pid = [process[@"pid"] intValue];
-                        break;
-                    }
-                }
-                
-                if (pid == -1) {
-                    printf("app is not running, fail");
-                    exit(1);
-                }
-                removeFileAtPath(@"/tmp/merge_ent.plist");
-                copyFile([bundlePath stringByAppendingPathComponent:@"merge_ent.plist"], @"/tmp/merge_ent.plist");
-                NSMutableDictionary *plistDict = [NSMutableDictionary dictionaryWithContentsOfFile:@"/tmp/merge_ent.plist"];
-                [plistDict setObject:argv2 forKey:@"com.apple.private.security.container-required"];
-                [plistDict writeToFile:@"/tmp/merge_ent.plist" atomically:YES];
-                
-                DumpDecrypted *dd = [[DumpDecrypted alloc] initWithPathToBinary:[appBundleAppPath stringByAppendingPathComponent:appName]];
-                
-                NSString *fileNameNSString = [appBundleAppPath stringByAppendingPathComponent:appName];
-                const char *fileName = [fileNameNSString UTF8String];
-                
-                [dd dumpDecrypted:pid fileName:fileName];
-                
-                //                removeFileAtPath([appBundleAppPath stringByAppendingPathComponent:appName]);
-                
-                moveFile([appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_DECRYPTED"]], [appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]);
-            }
+            copyFile([appBundleAppPath stringByAppendingPathComponent:appName], [appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]);
             
-//            NSMutableArray* args2 = [NSMutableArray new];
-//            NSString *binaryPath2 = [bundlePath stringByAppendingPathComponent:@"insert_dylib"];
-//            NSMutableArray* args3 = [NSMutableArray new];
-//            NSString *binaryPath3 = [bundlePath stringByAppendingPathComponent:@"exepatch"];
-//            if (strstr(argv[2], "com.apple.") &&
-//                strstr(argv[2], "com.apple.supportapp") == NULL &&
-//                strstr(argv[2], "com.apple.store.Jolly") == NULL &&
-//                strstr(argv[2], "com.apple.Keynote") == NULL &&
-//                strstr(argv[2], "com.apple.iMovie") == NULL &&
-//                strstr(argv[2], "com.apple.mobilegarageband") == NULL &&
-//                strstr(argv[2], "com.apple.Pages") == NULL &&
-//                strstr(argv[2], "com.apple.Numbers") == NULL &&
-//                strstr(argv[2], "com.apple.music.classical") == NULL) {
-//                [args3 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
-//                spawnRoot(binaryPath3, args3, nil, nil, nil);
-//            } else {
-//                [args2 addObject:@"@executable_path/appstorehelper.dylib"];
-//                [args2 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
-//                [args2 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
-//                [args2 addObject:@"--inplace"];
-//                [args2 addObject:@"--all-yes"];
-//                [args2 addObject:@"--overwrite"];
-//                [args2 addObject:@"--no-strip-codesig"];
-//                spawnRoot(binaryPath2, args2, nil, nil, nil);
-//            }
+            MachO *theMacho = macho_init_for_reading([appBundleAppPath stringByAppendingPathComponent:appName].UTF8String);
+            bool isEncrypted = macho_is_encrypted(theMacho);
+            macho_free(theMacho);
             
             NSMutableArray* args8 = [NSMutableArray new];
-            NSString *binaryPath8 = [bundlePath stringByAppendingPathComponent:@"ldid"];
+            NSString *binaryPath8 = @"/var/jb/basebins/ldid_dpkg_autosign";
             [args8 addObject:@"-M"];
-            [args8 addObject:[@"-S" stringByAppendingString:@"/tmp/merge_ent.plist"]];
+            if (cleanedOutput == NULL) {
+                removeFileAtPath(@"/tmp/merge_ent.plist");
+                NSMutableDictionary *plistDict = [NSMutableDictionary dictionaryWithContentsOfFile:[bundlePath stringByAppendingPathComponent:@"merge_ent.plist"]];
+                [plistDict setObject:argv2 forKey:@"com.apple.private.security.container-required"];
+                [plistDict writeToFile:@"/tmp/merge_ent.plist" atomically:YES];
+                [args8 addObject:[@"-S" stringByAppendingString:@"/tmp/merge_ent.plist"]];
+            } else {
+                [args8 addObject:[@"-S" stringByAppendingString:[bundlePath stringByAppendingPathComponent:@"merge_ent.plist"]]];
+            }
             [args8 addObject:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]];
             [args8 addObject:[@"-I" stringByAppendingString:argv2]];
+            
             spawnRoot(binaryPath8, args8, nil, nil, nil);
             removeFileAtPath(@"/tmp/merge_ent.plist");
             
-            if (strstr(argv[2], "com.apple.supportapp") ||
-                 strstr(argv[2], "com.apple.store.Jolly") ||
-                 strstr(argv[2], "com.apple.Keynote") ||
-                 strstr(argv[2], "com.apple.iMovie") ||
-                 strstr(argv[2], "com.apple.mobilegarageband") ||
-                 strstr(argv[2], "com.apple.Pages") ||
-                 strstr(argv[2], "com.apple.Numbers") ||
-                 strstr(argv[2], "com.apple.music.classical")) {
-                teamIDUse = (char *)cleanedOutput.UTF8String;
-            } else if (strstr(argv[2], "com.apple.") == NULL) {
-                teamIDUse = (char *)cleanedOutput.UTF8String;
+            if (isEncrypted) {
+                apply_coretrust_bypass_wrapper([appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]].UTF8String, [appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]].UTF8String, cleanedOutput, argv[2], (char *)[appBundleAppPath stringByAppendingPathComponent:appName].UTF8String);
+                FILE *isEncrypted = fopen([appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR_ISENCRYPTED"]].UTF8String, "w");
+                fclose(isEncrypted);
+                setUserAndGroup([appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR_ISENCRYPTED"]]);
+            } else {
+                apply_coretrust_bypass_wrapper([appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]].UTF8String, [appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]].UTF8String, cleanedOutput, argv[2], NULL);
             }
-            
-            apply_coretrust_bypass_wrapper([appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]].UTF8String, [appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]].UTF8String, teamIDUse, NULL);
             
             addExecutePermission([appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]);
             removeExecutePermission([appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]);
@@ -824,21 +954,68 @@ int main(int argc, char *argv[], char *envp[]) {
             exit(0);
         }
         
+        
+#if !DTSECURITY_WAIT_FOR_DEBUGGER
+        char *startSuspended = getenv("HAXX_START_SUSPENDED");
+        if (startSuspended && atoi(startSuspended)) {
+            usleep(100000); // FIXME: how to sleep until ptrace attach?
+        }
+#endif
+        
+        if(argc >= 2) {
+            if (strcmp(argv[1], "dtsecurity") == 0) {
+                char *boot_hash = return_boot_manifest_hash_main();
+                if (access("/var/jb/.procursus_strapped", F_OK) != 0) {
+                    char jbPath[PATH_MAX];
+                    snprintf(jbPath, sizeof(jbPath), "%s/jb", boot_hash);
+                    symlink(jbPath, "/var/jb");
+                    lchown("/var/jb", 0, 0);
+                }
+                symlink("/var/jb/System/Library/SysBins/faked", "/var/jb/lunch");
+                NSString *execDir = @"/var/db/com.apple.xpc.roleaccountd.staging/exec";
+                [NSFileManager.defaultManager createDirectoryAtPath:execDir withIntermediateDirectories:YES attributes:nil error:nil];
+                NSString *outDir = @"/var/db/com.apple.xpc.roleaccountd.staging/exec/TaskPortHaxx.xpc";
+                if (![[NSFileManager defaultManager] fileExistsAtPath:outDir]) {
+                    NSError *error = nil;
+                    [NSFileManager.defaultManager copyItemAtPath:@"/System/Library/PrivateFrameworks/DVTInstrumentsFoundation.framework/XPCServices/com.apple.dt.instruments.dtsecurity.xpc" toPath:outDir error:&error];
+                    if (error) {
+                        NSLog(@"Failed to copy dtsecurity.xpc: %@", error);
+                        return 1;
+                    }
+                }
+                char *portName = getenv("HAXX_EXCEPTION_PORT_NAME");
+                char *path = "/var/db/com.apple.xpc.roleaccountd.staging/exec/TaskPortHaxx.xpc/com.apple.dt.instruments.dtsecurity";
+                return child_execve(portName, path);
+            } else if (strcmp(argv[1], "updatebrain") == 0) {
+                char *portName = getenv("HAXX_EXCEPTION_PORT_NAME");
+                char *path = "/var/db/com.apple.xpc.roleaccountd.staging/exec/com.apple.MobileSoftwareUpdate.UpdateBrainService.xpc/com.apple.MobileSoftwareUpdate.UpdateBrainService";
+                return child_execve(portName, path);
+            } else if (strcmp(argv[1], "updatebrain-prepare") == 0) {
+                return child_stage1_prepare();
+            }
+        }
+        
+        
         NSString *processPath = executablePathForPID(1);
-        if (processPath && ![processPath isEqualToString:@"/sbin/launchd"]) {
-            dlopen("/System/Library/VideoCodecs/lib/hooks/generalhook.dylib", RTLD_NOW | RTLD_GLOBAL);
+        if (processPath && [processPath isEqualToString:@"/sbin/launchd"]) {
+            //            dlopen("/System/Library/VideoCodecs/lib/hooks/generalhook.dylib", RTLD_NOW | RTLD_GLOBAL);
+            initLoad();
         }
         // Setup code that might create autoreleased objects goes here.
         appDelegateClassName = NSStringFromClass([AppDelegate class]);
-        }
-    NSString *processPath = executablePathForPID(1);
-    if (processPath && [processPath isEqualToString:@"/sbin/launchd"]) {
-        const char* boot_manifest_hash = return_boot_manifest_hash_main();
-        char kernel_path[512];
-        snprintf(kernel_path, sizeof(kernel_path), "%s/System/Library/Caches/com.apple.kernelcaches/kernelcache", boot_manifest_hash);
-        initialise_kernel_info(kernel_path, false);
     }
+    //    if (__builtin_available(iOS 17.0, *)) {
+    //        //
+    //    } else {
+    //        NSString *processPath = executablePathForPID(1);
+    //        if (processPath && [processPath isEqualToString:@"/sbin/launchd"]) {
+    //            const char* boot_manifest_hash = return_boot_manifest_hash_main();
+    //            char kernel_path[512];
+    //            snprintf(kernel_path, sizeof(kernel_path), "%s/System/Library/Caches/com.apple.kernelcaches/kernelcache", boot_manifest_hash);
+    //            initialise_kernel_info(kernel_path, false);
+    //        }
+    //    }
     
     return UIApplicationMain(argc, argv, nil, appDelegateClassName);
-    }
+}
 

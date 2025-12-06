@@ -112,16 +112,18 @@ void launchAndCheckProcess(NSString *appName, NSString *bundleID) {
     NSLog(@"Process %@ with PID %d found!", appName, pid);
 }
 
-void decryptApp(NSDictionary *app) {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [TSPresentationDelegate startActivity:@"Injecting..."];
-//        alertWindow = [[UIWindow alloc] initWithFrame: [UIScreen mainScreen].bounds];
-//        alertWindow.rootViewController = [UIViewController new];
-//        alertWindow.windowLevel = UIWindowLevelAlert + 1;
-//        [alertWindow makeKeyAndVisible];
-        
-        // Show a "Decrypting!" alert on the device and block the UI
-    });
+void decryptApp(NSDictionary *app, BOOL uninjectall) {
+    if(uninjectall == NO) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [TSPresentationDelegate startActivity:@"Injecting..."];
+            //        alertWindow = [[UIWindow alloc] initWithFrame: [UIScreen mainScreen].bounds];
+            //        alertWindow.rootViewController = [UIViewController new];
+            //        alertWindow.windowLevel = UIWindowLevelAlert + 1;
+            //        [alertWindow makeKeyAndVisible];
+            
+            // Show a "Decrypting!" alert on the device and block the UI
+        });
+    }
 
 //    NSLog(@"[trolldecrypt] spawning thread to do decryption in background...");
 
@@ -145,18 +147,21 @@ void decryptApp(NSDictionary *app) {
         NSString *appBundleAppPath = findAppPathInBundlePath(appBundlePath);
             int tries = 0;
             int status = -1;
-            while (status != 0 && tries <= 5) {
-                BOOL isExec = [[NSFileManager defaultManager] isExecutableFileAtPath:[appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]];
-                if (isExec || !fileExists([appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"])) {
-                    launchAndCheckProcess(binaryName, bundleID);
-                }
-                //        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                NSMutableArray* args = [NSMutableArray new];
-                [args addObject:@"--appinject"];
-                [args addObject:bundleID];
-                NSString *bundlePath = [[NSBundle mainBundle] bundlePath];
-                NSString *binaryPath = [bundlePath stringByAppendingPathComponent:@"NathanLR"];
-                spawnRoot(binaryPath, args, nil, nil, &status);
+        while (status != 0 && tries <= 5) {
+//            if(uninjectall == NO) {
+//                BOOL isExec = [[NSFileManager defaultManager] isExecutableFileAtPath:[appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]];
+//                if (isExec || !fileExists([appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"])) {
+//                    launchAndCheckProcess(binaryName, bundleID);
+//                }
+//            }
+            //        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            NSMutableArray* args = [NSMutableArray new];
+            [args addObject:@"--appinject"];
+            [args addObject:bundleID];
+            NSString *bundlePath = [[NSBundle mainBundle] bundlePath];
+            NSString *binaryPath = [bundlePath stringByAppendingPathComponent:@"NathanLR"];
+            spawnRoot(binaryPath, args, nil, nil, &status);
+            if(uninjectall == NO) {
                 if (![[NSFileManager defaultManager] isExecutableFileAtPath:[appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]] || tries == 5) {
                     dispatch_async(dispatch_get_main_queue(), ^{
                         if(status != 0) {
@@ -189,6 +194,7 @@ void decryptApp(NSDictionary *app) {
                 }
                 tries++;
             }
+        }
             //    });
     });
 }
