@@ -109,6 +109,10 @@ class OptionsViewController: UIViewController, UITableViewDelegate, UITableViewD
             if FileManager.default.fileExists(atPath: "/var/jb/basebins/appstorehelper.dylib") {
                 tableData[0].append(contentsOf: ["App Injection"])
             }
+            if let executablePath = executablePathForPID(1) as String?, executablePath == "/sbin/launchd" {
+                tableData[0].append(contentsOf: ["Toggle Safe Mode"])
+            }
+            
         }
         
         tableView.reloadData()
@@ -181,6 +185,22 @@ class OptionsViewController: UIViewController, UITableViewDelegate, UITableViewD
         case "Enter Safe Mode":
             crashSpringBoard()
             exit(0)
+        case "Toggle Safe Mode":
+            let path = "/var/mobile/.eksafemode"
+            let fm = FileManager.default
+            var message = ""
+
+            if fm.fileExists(atPath: path) {
+                try? fm.removeItem(atPath: path)
+                message = "Safe Mode Disabled"
+            } else {
+                fm.createFile(atPath: path, contents: nil)
+                message = "Safe Mode Enabled"
+            }
+
+            let alert = UIAlertController(title: "Safe Mode", message: message, preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+            self.present(alert, animated: true, completion: nil)
         case "Remove Jailbreak":
             removeJailbreak()
     //    case "Changelogs":
