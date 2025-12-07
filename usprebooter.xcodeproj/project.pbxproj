@@ -704,7 +704,7 @@
 					"$(PROJECT_DIR)/usprebooter/External/lib",
 					"$(PROJECT_DIR)_hooks/procursus_td/ChOma/external/ios",
 				);
-				MARKETING_VERSION = 2.0.3;
+				MARKETING_VERSION = 2.0.4;
 				OTHER_CFLAGS = (
 					"-Wno-unused-variable",
 					"-Wno-unused-function",
@@ -766,7 +766,7 @@
 					"$(PROJECT_DIR)/usprebooter/External/lib",
 					"$(PROJECT_DIR)_hooks/procursus_td/ChOma/external/ios",
 				);
-				MARKETING_VERSION = 2.0.3;
+				MARKETING_VERSION = 2.0.4;
 				OTHER_CFLAGS = (
 					"-Wno-unused-variable",
 					"-Wno-unused-function",
