@@ -46,6 +46,69 @@ bool macho_is_encrypted(MachO *macho);
 MachO *macho_init_for_reading(const char *filePath);
 void initLoad(void);
 
+bool isSupported(void)
+{
+    struct utsname systemInfo;
+    uname(&systemInfo);
+    NSString *thisDevice = [NSString stringWithUTF8String:systemInfo.machine];
+    
+    cpu_subtype_t cpuFamily = 0;
+    size_t cpuFamilySize = sizeof(cpuFamily);
+    sysctlbyname("hw.cpufamily", &cpuFamily, &cpuFamilySize, NULL, 0);
+    
+    NSString *thisCPU;
+    switch (cpuFamily) {
+        case CPUFAMILY_ARM_TYPHOON:              thisCPU = @"A8";  break;
+        case CPUFAMILY_ARM_TWISTER:              thisCPU = @"A9";  break;
+        case CPUFAMILY_ARM_HURRICANE:            thisCPU = @"A10"; break;
+        case CPUFAMILY_ARM_MONSOON_MISTRAL:      thisCPU = @"A11"; break;
+        case CPUFAMILY_ARM_VORTEX_TEMPEST:       thisCPU = @"A12"; break;
+        case CPUFAMILY_ARM_LIGHTNING_THUNDER:    thisCPU = @"A13"; break;
+        case CPUFAMILY_ARM_FIRESTORM_ICESTORM:   thisCPU = @"A14"; break;
+        case CPUFAMILY_ARM_BLIZZARD_AVALANCHE:   thisCPU = @"A15"; break;
+        case CPUFAMILY_ARM_EVEREST_SAWTOOTH:     thisCPU = @"A16"; break;
+        case CPUFAMILY_ARM_COLL:                 thisCPU = @"A17"; break;
+    }
+    
+    char OSVersionString[64];
+    size_t OSVersionStringLen = sizeof(OSVersionString) - 1;
+    sysctlbyname("kern.osversion", OSVersionString, &OSVersionStringLen, NULL, 0);
+    NSString *thisIOSBuild = [NSString stringWithUTF8String:OSVersionString];
+    
+    NSString *thisIOSVersion = [[UIDevice currentDevice] systemVersion];
+    
+    NSString *startVersion = @"16.5.1";
+    NSString *endVersion   = @"17.0";
+    
+    int (^parseVersion)(NSString*, int*) = ^int(NSString *ver, int out[3]) {
+        NSArray<NSString *> *parts = [ver componentsSeparatedByString:@"."];
+        for (int i = 0; i < 3; i++) out[i] = (i < parts.count) ? parts[i].intValue : 0;
+        return 0;
+    };
+
+    int cur[3], start[3], end[3];
+    parseVersion(thisIOSVersion, cur);
+    parseVersion(startVersion, start);
+    parseVersion(endVersion, end);
+
+    BOOL inRange =
+        (cur[0] > start[0] || (cur[0] == start[0] && (cur[1] > start[1] || (cur[1] == start[1] && cur[2] >= start[2])))) &&
+        (cur[0] < end[0]   || (cur[0] == end[0]   && (cur[1] < end[1]   || (cur[1] == end[1]   && cur[2] <= end[2]))));
+
+    BOOL isA12_A13_A14 =
+        [thisCPU isEqualToString:@"A12"] ||
+        [thisCPU isEqualToString:@"A13"] ||
+        [thisCPU isEqualToString:@"A14"];
+
+    BOOL isiOS16_5_1 = (cur[0] == 16 && cur[1] == 5 && cur[2] == 1);
+
+    if (isA12_A13_A14 && isiOS16_5_1) {
+        return NO;
+    }
+    
+    return inRange;
+}
+
 NSError *showNonDefaultSystemApps(void)
 {
     _CFPreferencesSetValueWithContainer(CFSTR("SBShowNonDefaultSystemApps"), kCFBooleanTrue, CFSTR("com.apple.springboard"), CFSTR("mobile"), kCFPreferencesAnyHost, kCFPreferencesNoContainer);
@@ -881,6 +944,7 @@ int main(int argc, char *argv[], char *envp[]) {
             } else if (isExec) {
                 NSLog(@"Apparently failed at some point.");
                 removeFileAtPath([appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]);
+                removeFileAtPath([NSString stringWithFormat:@"%@/%@", appBundleAppPath, [appName stringByAppendingString:@"_NATHANLR_ISENCRYPTED"]]);
                 if ([fileManager fileExistsAtPath:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR_BACKUP"]]]) {
                     removeFileAtPath([NSString stringWithFormat:@"%@/%@", appBundleAppPath, appName]);
                     moveFile([appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR_BACKUP"]], [appBundleAppPath stringByAppendingPathComponent:appName]);
@@ -889,11 +953,13 @@ int main(int argc, char *argv[], char *envp[]) {
                 killall2(appName, YES, NO);
                 removeFileAtPath([NSString stringWithFormat:@"%@/%@", appBundleAppPath, appName]);
                 removeFileAtPath([appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]);
+                removeFileAtPath([NSString stringWithFormat:@"%@/%@", appBundleAppPath, [appName stringByAppendingString:@"_NATHANLR_ISENCRYPTED"]]);
                 moveFile([appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR_BACKUP"]], [appBundleAppPath stringByAppendingPathComponent:appName]);
                 exit(0);
             } else if ([fileManager fileExistsAtPath:[appBundleAppPath stringByAppendingPathComponent:[appName stringByAppendingString:@"_NATHANLR"]]]) {
                 killall2(appName, YES, NO);
                 removeFileAtPath([NSString stringWithFormat:@"%@/%@", appBundleAppPath, [appName stringByAppendingString:@"_NATHANLR"]]);
+                removeFileAtPath([NSString stringWithFormat:@"%@/%@", appBundleAppPath, [appName stringByAppendingString:@"_NATHANLR_ISENCRYPTED"]]);
                 removeFileAtPath([appBundleAppPath stringByAppendingString:@"/appstorehelper.dylib"]);
                 exit(0);
             }

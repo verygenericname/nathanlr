@@ -30,23 +30,6 @@ class JailbreakViewController: UIViewController, UITableViewDelegate, UITableVie
 
         let toolbarHeight: CGFloat = 70
         
-        func isCurrentiOSVersionInRange() -> Bool {
-            let startVersion = "16.5.1"
-            // let endVersion = "16.6.1"
-            let endVersion = "17.0"
-            let systemVersion = UIDevice.current.systemVersion
-            func versionTuple(from versionString: String) -> (Int, Int, Int) {
-                let components = versionString.split(separator: ".").compactMap { Int($0) }
-                return (components[0], components[1], components.count > 2 ? components[2] : 0)
-            }
-            
-            let currentVersionTuple = versionTuple(from: systemVersion)
-            let startVersionTuple = versionTuple(from: startVersion)
-            let endVersionTuple = versionTuple(from: endVersion)
-            
-            return (currentVersionTuple >= startVersionTuple) && (currentVersionTuple <= endVersionTuple)
-        }
-        
         let hashPointer = return_boot_manifest_hash_main()
 
         let hash: String
@@ -58,7 +41,7 @@ class JailbreakViewController: UIViewController, UITableViewDelegate, UITableVie
 
         let baseBinsPath = "\(hash)/jb/.installed_nathanlr"
         
-        if !isCurrentiOSVersionInRange() {
+        if !isSupported() {
             let jbButton = jbButton(state: .unsupported)
             jbButton.delegate = self
             

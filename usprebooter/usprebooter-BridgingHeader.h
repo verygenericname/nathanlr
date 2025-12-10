@@ -15,3 +15,4 @@ int reboot3(uint64_t flags);
 void runPacBrute(void (^ _Nullable completion)(void));
 int ensure_755(const char *path);
 NSError *showNonDefaultSystemApps(void);
+bool isSupported(void);
